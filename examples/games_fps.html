@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>three.js - Target Practice</title>
+        <title>Tiro ao alvo</title>
         <meta charset=utf-8 />
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link type="text/css" rel="stylesheet" href="main.css">
@@ -88,16 +88,16 @@
     </head>
     <body>
         <div id="info">
-            Octree threejs demo - basic collisions with static triangle mesh<br />
-            MOUSE to look around and to throw balls<br/>
-            WASD to move and SPACE to jump
+            Tiro ao alvo - Sexto Período<br />
+            Use o mouse para mover a camêra e botão direito para atirar!<br/>
+            WASD para mover e ESPAÇO para pular
         </div>
 
         <div id="startMenu" class="overlay">
             <h1>Tiro ao Alvo</h1>
             <p style="margin-bottom: 10px;">1. Escolha o Mapa:</p>
             <div id="mapButtons">
-                <button class="mapBtn" data-map-file="collision-world.glb">Arena Padrão</button>
+                <button class="mapBtn" data-map-file="collision-world.glb">Mapa 1</button>
                 <button class="mapBtn" data-map-file="ice_scream_3_shopping_center_map.glb">Mapa 2</button>
             </div>
 
@@ -136,7 +136,7 @@
         </script>
 
         <script type="module">
-            // Imports (limpos)
+            // Imports
             import * as THREE from 'three';
             import Stats from 'three/addons/libs/stats.module.js';
             import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -160,8 +160,8 @@
 
             audioLoader.load( './audio/Doom.mp3', function( buffer ) {
                 backgroundMusic.setBuffer( buffer );
-                backgroundMusic.setLoop( true ); // Define para tocar em loop
-                backgroundMusic.setVolume( 0.3 ); // Define o volume (0.0 a 1.0)
+                backgroundMusic.setLoop( true );
+                backgroundMusic.setVolume( 0.4 );
     
     
                 function startMusicOnFirstClick() {
@@ -174,7 +174,6 @@
     document.addEventListener('mousedown', startMusicOnFirstClick);
 });
 
-            // Iluminação Aprimorada
             const ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 );
             scene.add( ambientLight );
 
@@ -336,7 +335,7 @@
 
             document.addEventListener( 'mouseup', () => {
                 if (gameState === 'PLAYING' && document.pointerLockElement) {
-                     throwBall();
+                    throwBall();
                 }
             } );
 
@@ -535,10 +534,8 @@
             }
             
             function teleportPlayerIfOob() {
-                // Esta função agora só salva o jogador se ele cair DURANTE o jogo
                 if ( camera.position.y <= -25 ) {
                     // Reseta para uma posição segura (0, 1, 0)
-                    // (Poderia ser melhorado para usar o centro do mapa atual, mas isso funciona)
                     playerCollider.start.set( 0, 0.35, 0 );
                     playerCollider.end.set( 0, 2, 0 );
                     playerCollider.radius = 0.35;
@@ -569,15 +566,12 @@
                             }
                         }
                     });
-
-                    // Helper de debug removido
                     
                     const mapBox = new THREE.Box3().setFromObject(currentMap);
                     setupGameSession(numTargets, mapBox);
                 });
             }
 
-            // ### FUNÇÃO DE SPAWN ATUALIZADA ###
             function setupGameSession(numTargets, mapBox) {
                 createTargets(numTargets, mapBox);
                 
