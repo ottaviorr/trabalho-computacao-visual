@@ -1,666 +1,689 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
     <head>
-        <title>Tiro ao alvo</title>
+        <title>Tiro ao Alvo - DOOM Edition</title>
         <meta charset=utf-8 />
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <link type="text/css" rel="stylesheet" href="main.css">
-        
         <style>
-            body { margin: 0; }
+            body { margin: 0; overflow: hidden; user-select: none; font-family: 'Courier New', Courier, monospace; }
+            
+            /* UI GERAL */
             .overlay {
                 position: absolute;
-                top: 50%;
-                left: 50%;
+                top: 50%; left: 50%;
                 transform: translate(-50%, -50%);
                 color: white;
-                font-family: monospace;
                 text-align: center;
-                background-color: rgba(0, 0, 0, 0.8);
+                background-color: rgba(0, 0, 0, 0.95);
                 padding: 40px;
-                border-radius: 10px;
+                border-radius: 15px;
+                border: 2px solid #4CAF50;
                 z-index: 101;
-                width: 80%;
-                max-width: 500px;
+                width: 80%; max-width: 600px;
+                display: none; /* Escondido por padrão */
             }
-            .overlay h1 { font-size: 48px; margin-bottom: 20px; }
-            .overlay p { font-size: 22px; margin-bottom: 30px; }
-            .overlay button {
-                font-size: 24px;
-                padding: 10px 20px;
+            
+            /* ESTILO DOS BOTÕES */
+            button {
+                font-family: inherit;
+                font-size: 20px;
+                padding: 12px 24px;
                 cursor: pointer;
-                margin: 5px;
-            }
-            #hud {
-                position: absolute;
-                top: 10px;
-                left: 10px;
+                margin: 8px;
+                background: transparent;
                 color: white;
-                font-family: monospace;
-                font-size: 24px;
-                background-color: rgba(0, 0, 0, 0.5);
-                padding: 10px;
-                border-radius: 5px;
-                z-index: 100;
-                display: none;
+                border: 2px solid #fff;
+                transition: 0.3s;
+                text-transform: uppercase;
+                font-weight: bold;
             }
-            #startMenu { display: flex; flex-direction: column; align-items: center; }
-            #endScreen { display: none; }
+            button:hover:not(:disabled) { background-color: #fff; color: #000; }
+            button:disabled { opacity: 0.3; cursor: not-allowed; }
+            button.selected { background-color: #4CAF50; border-color: #4CAF50; }
 
-            #crosshair {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: white;
+            /* HUD (CABEÇALHO DURANTE O JOGO) */
+            #hud {
+                position: absolute; top: 0; left: 0; width: 100%;
+                display: flex; justify-content: space-around;
+                background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+                padding: 15px 0;
+                color: #fff;
                 font-size: 24px;
                 font-weight: bold;
-                font-family: monospace;
-                pointer-events: none;
-                z-index: 100;
+                text-shadow: 2px 2px 0 #000;
+                z-index: 90;
                 display: none;
             }
-            #startMenu button {
-                transition: background-color 0.2s, border-color 0.2s, opacity 0.2s;
-                border: 2px solid white;
-                background-color: transparent;
-                color: white;
+            #targetCounter { color: #FFD700; }
+            
+            /* MIRA */
+            #crosshair {
+                position: absolute; top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                width: 20px; height: 20px;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                border-radius: 50%;
+                z-index: 90;
+                pointer-events: none;
+                display: none;
             }
-            #startMenu button:hover:not(:disabled) {
-                background-color: white;
-                color: black;
+            #crosshair::after {
+                content: ''; position: absolute; top: 50%; left: 50%;
+                width: 4px; height: 4px; background: red;
+                transform: translate(-50%, -50%); border-radius: 50%;
             }
-            #startMenu button.selected {
-                background-color: #4CAF50;
-                border-color: #4CAF50;
+
+            /* RANKING TABLE */
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 10px; border-bottom: 1px solid #444; text-align: center; }
+            th { background: #222; color: #4CAF50; }
+            .rank-1 { color: #FFD700; font-weight: bold; }
+            .rank-2 { color: #C0C0C0; }
+            .rank-3 { color: #CD7F32; }
+
+            /* LISTA DE CRÉDITOS */
+            .credits-list li {
+                padding: 10px;
+                font-size: 22px;
+                color: #ddd;
+                border-bottom: 1px solid #333;
             }
-            #startMenu button:disabled {
-                opacity: 0.4;
-                cursor: not-allowed;
-            }
-            #mapButtons, #difficultyButtons {
-                display: flex;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 10px;
+            .credits-list li:hover { color: #4CAF50; }
+
+            /* MENUS ESPECÍFICOS */
+            #startMenu { display: flex; flex-direction: column; }
+            #endScreen h1 { font-size: 50px; margin: 0 0 20px 0; }
+            .input-group { margin: 20px 0; }
+            input[type="text"] {
+                font-size: 20px; padding: 10px; text-align: center;
+                background: #222; border: 1px solid #555; color: white;
+                font-family: inherit; width: 60%;
             }
         </style>
     </head>
     <body>
-        <div id="info">
-            Tiro ao alvo - Sexto Período<br />
-            Use o mouse para mover a camêra e botão direito para atirar!<br/>
-            WASD para mover e ESPAÇO para pular
-        </div>
-
-        <div id="startMenu" class="overlay">
-            <h1>Tiro ao Alvo</h1>
-            <p style="margin-bottom: 10px;">1. Escolha o Mapa:</p>
-            <div id="mapButtons">
-                <button class="mapBtn" data-map-file="collision-world.glb">Mapa 1</button>
-                <button class="mapBtn" data-map-file="ice_scream_3_shopping_center_map.glb">Mapa 2</button>
-            </div>
-
-            <p style="margin-top: 25px; margin-bottom: 10px;">2. Escolha a Dificuldade:</p>
-            <div id="difficultyButtons">
-                <button class="diffBtn" data-difficulty="easy">Fácil (10)</button>
-                <button class="diffBtn" data-difficulty="medium">Médio (20)</button>
-                <button class="diffBtn" data-difficulty="hard">Difícil (35)</button>
-            </div>
-            
-            <button id="startGameBtn" style="margin-top: 30px;" disabled>Iniciar Jogo</button>
-        </div>
 
         <div id="hud">
-            <div id="timer">Tempo: 60</div>
-            <div id="score">Pontos: 0</div>
+            <div id="timer">⏳ 60</div>
+            <div id="score">PTS: 0</div>
+            <div id="targetCounter">🎯 0/0</div>
+        </div>
+        <div id="crosshair"></div>
+
+        <div id="startMenu" class="overlay" style="display: flex;">
+            <h1 style="color: #4CAF50; margin-bottom: 5px;">🎯 Tiro ao Alvo</h1>
+            <p style="font-size: 14px; color: #aaa;">WASD: Mover | ESPAÇO: Pular | MOUSE: Atirar</p>
+            
+            <h3>1. ESCOLHA O MAPA</h3>
+            <div id="mapButtons">
+                <button class="mapBtn" data-map="collision-world.glb">Mapa Padrão</button>
+                <button class="mapBtn" data-map="ice_scream_3_shopping_center_map.glb">Shopping</button>
+            </div>
+
+            <h3>2. DIFICULDADE</h3>
+            <div id="diffButtons">
+                <button class="diffBtn" data-val="10">Fácil (10 Alvos)</button>
+                <button class="diffBtn" data-val="20">Médio (20 Alvos)</button>
+                <button class="diffBtn" data-val="35">Difícil (35 Alvos)</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button id="btnStart" disabled>JOGAR AGORA</button>
+            </div>
+            
+            <div style="margin-top: 10px;">
+                <button id="btnRank">RANKING</button>
+                <button id="btnCredits">CRÉDITOS</button>
+            </div>
         </div>
 
         <div id="endScreen" class="overlay">
-            <h1>Fim de Jogo!</h1>
-            <p>Sua pontuação final: <span id="finalScore">0</span></p>
-            <button id="restartButton">Voltar ao Menu</button>
+            <h1 id="endTitle">FIM DE JOGO</h1>
+            <p>Pontos: <span id="endScore" style="color: #4CAF50; font-weight: bold;">0</span></p>
+            <p>Tempo Restante: <span id="endTime" style="color: #2196F3;">0</span>s</p>
+            
+            <div class="input-group">
+                <input type="text" id="playerName" placeholder="DIGITE SEU NOME" maxlength="15">
+            </div>
+            
+            <button id="btnSave">SALVAR PONTUAÇÃO</button>
+            <button id="btnRestart">VOLTAR AO MENU</button>
         </div>
 
-        <div id="crosshair">+</div>
+        <div id="rankScreen" class="overlay">
+            <h1 style="color: #FFD700;">🏆 HALL DA FAMA</h1>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <table id="rankTable">
+                    <thead><tr><th>#</th><th>NOME</th><th>PTS</th><th>TEMPO</th><th>MODO</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button id="btnCloseRank" style="margin-top: 20px;">FECHAR</button>
+        </div>
+
+        <div id="creditsScreen" class="overlay">
+            <h1 style="color: #2196F3;">👥 EQUIPE</h1>
+            <ul class="credits-list" style="list-style: none; padding: 0; margin: 20px 0;">
+                <li>Rafael Florindo</li>
+                <li>Luciano Junior</li>
+                <li>Otavio Herdy</li>
+                <li>Caua Vitor</li>
+                <li>Professor Orientador - Tulio Gomes</li>
+            </ul>
+            <p style="font-size: 14px; color: #888; margin-top: 30px;">Tiro ao Alvo - Sexto Período</p>
+            <button id="btnCloseCredits">VOLTAR</button>
+        </div>
 
         <div id="container"></div>
 
         <script type="importmap">
             {
                 "imports": {
-                    "three": "../build/three.module.js",
-                    "three/addons/": "./jsm/"
+                    "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js",
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/"
                 }
             }
         </script>
 
         <script type="module">
-            // Imports
             import * as THREE from 'three';
-            import Stats from 'three/addons/libs/stats.module.js';
             import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
             import { Octree } from 'three/addons/math/Octree.js';
             import { Capsule } from 'three/addons/math/Capsule.js';
 
-            // Configuração da cena
-            const clock = new THREE.Clock();
+            // ==========================================
+            // 0. CONFIGURAÇÃO GERAL
+            // ==========================================
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color( 0x88ccee );
-            scene.fog = new THREE.Fog( 0x88ccee, 0, 150 );
-            const camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            scene.background = new THREE.Color(0x88ccee);
+            scene.fog = new THREE.Fog(0x88ccee, 0, 100);
+
+            const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
             camera.rotation.order = 'YXZ';
 
-            const listener = new THREE.AudioListener();
-            camera.add( listener );
-
-            const backgroundMusic = new THREE.Audio( listener );
-
-            const audioLoader = new THREE.AudioLoader();
-
-            audioLoader.load( './audio/Doom.mp3', function( buffer ) {
-                backgroundMusic.setBuffer( buffer );
-                backgroundMusic.setLoop( true );
-                backgroundMusic.setVolume( 0.4 );
-    
-    
-                function startMusicOnFirstClick() {
-                    if (!backgroundMusic.isPlaying) {
-                    backgroundMusic.play();
-                    }
-                    document.removeEventListener('mousedown', startMusicOnFirstClick);
-                }
-    
-    document.addEventListener('mousedown', startMusicOnFirstClick);
-});
-
-            const ambientLight = new THREE.AmbientLight( 0xffffff, 0.5 );
-            scene.add( ambientLight );
-
-            const hemisphereLight = new THREE.HemisphereLight( 0x8dc1de, 0xb1957a, 1.5 );
-            hemisphereLight.position.set( 2, 1, 1 );
-            scene.add( hemisphereLight );
-
-            const directionalLight = new THREE.DirectionalLight( 0xfffbe3, 3.0 );
-            directionalLight.position.set( - 5, 25, - 1 );
-            directionalLight.castShadow = true;
-            directionalLight.shadow.camera.near = 0.01;
-            directionalLight.shadow.camera.far = 500;
-            directionalLight.shadow.camera.right = 30;
-            directionalLight.shadow.camera.left = - 30;
-            directionalLight.shadow.camera.top    = 30;
-            directionalLight.shadow.camera.bottom = - 30;
-            directionalLight.shadow.mapSize.width = 1024;
-            directionalLight.shadow.mapSize.height = 1024;
-            directionalLight.shadow.radius = 4;
-            directionalLight.shadow.bias = - 0.00006;
-            scene.add( directionalLight );
-            
-            // Renderer e Stats
-            const container = document.getElementById( 'container' );
-            const renderer = new THREE.WebGLRenderer( { antialias: true } );
-            renderer.setPixelRatio( window.devicePixelRatio );
-            renderer.setSize( window.innerWidth, window.innerHeight );
-            renderer.setAnimationLoop( animate );
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.VSMShadowMap;
-            renderer.toneMapping = THREE.ACESFilFilmicToneMapping;
-            container.appendChild( renderer.domElement );
-            const stats = new Stats();
-            stats.domElement.style.position = 'absolute';
-            stats.domElement.style.top = '0px';
-            container.appendChild( stats.domElement );
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // ==========================================
+            // 1. SISTEMA DE ÁUDIO (MÚSICA + EFEITOS)
+            // ==========================================
             
-            // Constantes e Variáveis Globais
-            const GRAVITY = 30;
-            const STEPS_PER_FRAME = 5;
+            // 1.1 Listener do Three.js para a MÚSICA
+            const listener = new THREE.AudioListener();
+            camera.add(listener);
             
+            const backgroundMusic = new THREE.Audio(listener);
+            const audioLoader = new THREE.AudioLoader();
+
+            // Tenta carregar a música
+            audioLoader.load('./audio/Doom.mp3', function(buffer) {
+                backgroundMusic.setBuffer(buffer);
+                backgroundMusic.setLoop(true);
+                backgroundMusic.setVolume(0.4);
+                console.log("Música carregada com sucesso!");
+            }, undefined, function(err) {
+                console.warn("Erro ao carregar música. Verifique se a pasta 'audio/Doom.mp3' existe.");
+            });
+
+            // Função para destravar o áudio no clique
+            function startMusicContext() {
+                if (listener.context.state === 'suspended') {
+                    listener.context.resume();
+                }
+                if (backgroundMusic.buffer && !backgroundMusic.isPlaying) {
+                    backgroundMusic.play();
+                }
+            }
+
+            // 1.2 Sintetizador para EFEITOS SONOROS (Tiro, Acerto)
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            function playSound(type) {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+                
+                if (type === 'shoot') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'hit') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, now);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'win') {
+                    [523, 659, 784, 1046].forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.2, now + i*0.1);
+                        g.gain.linearRampToValueAtTime(0, now + i*0.1 + 0.5);
+                        o.start(now + i*0.1);
+                        o.stop(now + i*0.1 + 0.5);
+                    });
+                } else if (type === 'gameover') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(50, now + 1);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 1);
+                    osc.start(now);
+                    osc.stop(now + 1);
+                }
+            }
+
+            // ==========================================
+            // 2. ELEMENTOS DO CENÁRIO
+            // ==========================================
+            // Luzes
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+            dirLight.position.set(-5, 25, -1);
+            dirLight.castShadow = true;
+            dirLight.shadow.camera.near = 0.1;
+            dirLight.shadow.camera.far = 500;
+            dirLight.shadow.mapSize.set(2048, 2048);
+            scene.add(dirLight);
+
+            // Variáveis de Jogo
             let gameState = 'MENU';
             let score = 0;
-            let timeLeft = 60; 
-            const targets = [];
-            const targetMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-            const targetGeometry = new THREE.CylinderGeometry(0.8, 0.8, 0.3, 32);
-
-            // Variáveis para seleção de mapa
-            let currentMap = null;
-            let selectedMapFile = null;
-            let selectedDifficulty = null;
-            const loader = new GLTFLoader().setPath( './models/gltf/' );
-
-            const DIFFICULTIES = {
-                easy: 10,
-                medium: 20,
-                hard: 35
-            };
+            let timeRemaining = 60;
+            let totalTargets = 0;
+            let targetsHit = 0;
+            let currentMapName = "";
+            let currentDifficulty = "";
             
-            // Referências aos elementos da interface
-            const hudElement = document.getElementById('hud');
-            const timerElement = document.getElementById( 'timer' );
-            const scoreElement = document.getElementById( 'score' );
-            const startMenuElement = document.getElementById('startMenu');
-            const endScreenElement = document.getElementById( 'endScreen' );
-            const finalScoreElement = document.getElementById( 'finalScore' );
-            const restartButton = document.getElementById( 'restartButton' );
-            const crosshairElement = document.getElementById('crosshair');
-
-            // Novas referências de botões
-            const mapButtons = document.querySelectorAll('.mapBtn');
-            const difficultyButtons = document.querySelectorAll('.diffBtn');
-            const startGameBtn = document.getElementById('startGameBtn');
-            
-            // Configuração das Esferas e Jogador
-            const NUM_SPHERES = 100;
-            const SPHERE_RADIUS = 0.2;
-            const sphereGeometry = new THREE.IcosahedronGeometry( SPHERE_RADIUS, 5 );
-            const sphereMaterial = new THREE.MeshLambertMaterial( { color: 0xdede8d } );
-            const spheres = [];
-            let sphereIdx = 0;
-            for ( let i = 0; i < NUM_SPHERES; i ++ ) {
-                const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-                sphere.castShadow = true;
-                sphere.receiveShadow = true;
-                scene.add( sphere );
-                spheres.push( {
-                    mesh: sphere,
-                    collider: new THREE.Sphere( new THREE.Vector3( 0, - 100, 0 ), SPHERE_RADIUS ),
-                    velocity: new THREE.Vector3()
-                } );
-            }
+            // Física Player
+            const GRAVITY = 30;
             const worldOctree = new Octree();
-            const playerCollider = new Capsule( new THREE.Vector3( 0, 0.35, 0 ), new THREE.Vector3( 0, 1.8, 0 ), 0.35 );
+            const playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1, 0), 0.35);
             const playerVelocity = new THREE.Vector3();
             const playerDirection = new THREE.Vector3();
             let playerOnFloor = false;
-            let mouseTime = 0;
             const keyStates = {};
-            const vector1 = new THREE.Vector3();
-            const vector2 = new THREE.Vector3();
-            const vector3 = new THREE.Vector3();
 
-            // --- Funções de Alvo ---
-            function clearTargets() {
-                for (const target of targets) {
-                    scene.remove(target.mesh);
-                }
-                targets.length = 0;
-            }
-            
-            function createTargets(count, mapBox) {
-                clearTargets();
+            // Projéteis
+            const spheres = [];
+            const sphereGeometry = new THREE.IcosahedronGeometry(0.2, 3);
+            const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, roughness: 0.2 });
 
-                const mapSize = new THREE.Vector3();
-                mapBox.getSize(mapSize);
-                const mapCenter = new THREE.Vector3();
-                mapBox.getCenter(mapCenter);
+            // Alvos
+            let targets = [];
+            const targetGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.2, 32);
+            targetGeo.rotateX(Math.PI / 2); // Deixar de pé virado pra frente
 
-                const minX = mapCenter.x - (mapSize.x / 2) * 0.9;
-                const maxX = mapCenter.x + (mapSize.x / 2) * 0.9;
-                const minZ = mapCenter.z - (mapSize.z / 2) * 0.9;
-                const maxZ = mapCenter.z + (mapSize.z / 2) * 0.9;
-                const minY = mapBox.min.y + 1;
-                const maxY = mapBox.min.y + (mapSize.y * 0.8);
+            // Carregamento
+            const loader = new GLTFLoader().setPath('./models/gltf/');
+            let loadedMap = null;
 
-                for (let i = 0; i < count; i++) {
-                    const target = new THREE.Mesh(targetGeometry, targetMaterial);
-                    target.castShadow = true;
-                    target.receiveShadow = true;
+            // ==========================================
+            // 3. LÓGICA DE ALVOS (DINÂMICA)
+            // ==========================================
+            function spawnTargets(count, mapObj) {
+                targets.forEach(t => scene.remove(t.mesh));
+                targets = [];
+
+                const box = new THREE.Box3().setFromObject(mapObj);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                
+                const bounds = {
+                    xMin: box.min.x + 5, xMax: box.max.x - 5,
+                    yMin: box.min.y + 1, yMax: box.min.y + 8, 
+                    zMin: box.min.z + 5, zMax: box.max.z - 5
+                };
+
+                for(let i=0; i<count; i++) {
+                    const mat = new THREE.MeshStandardMaterial({ 
+                        color: Math.random() > 0.5 ? 0xff0000 : 0xffa500,
+                        emissive: 0x330000
+                    });
+                    const mesh = new THREE.Mesh(targetGeo, mat);
                     
-                    const px = THREE.MathUtils.randFloat(minX, maxX);
-                    const py = THREE.MathUtils.randFloat(minY, maxY);
-                    const pz = THREE.MathUtils.randFloat(minZ, maxZ);
-
-                    target.position.set(px, py, pz);
-                    target.rotation.x = Math.PI / 2;
-                    scene.add(target);
+                    mesh.position.set(
+                        THREE.MathUtils.randFloat(bounds.xMin, bounds.xMax),
+                        THREE.MathUtils.randFloat(bounds.yMin, bounds.yMax),
+                        THREE.MathUtils.randFloat(bounds.zMin, bounds.zMax)
+                    );
+                    
+                    mesh.lookAt(0, mesh.position.y, 0); 
+                    mesh.castShadow = true;
+                    scene.add(mesh);
 
                     targets.push({
-                        mesh: target,
-                        collider: new THREE.Sphere(target.position.clone(), 0.85),
+                        mesh: mesh,
+                        collider: new THREE.Sphere(mesh.position.clone(), 0.6),
                         active: true,
+                        basePos: mesh.position.clone(),
+                        axis: Math.random() > 0.5 ? 'y' : 'x',
+                        speed: THREE.MathUtils.randFloat(1, 3),
+                        offset: Math.random() * Math.PI * 2
                     });
                 }
+                
+                totalTargets = count;
+                targetsHit = 0;
+                updateHUD();
             }
 
-            // --- Eventos de Controle ---
-            document.addEventListener( 'keydown', ( event ) => { keyStates[ event.code ] = true; } );
-            document.addEventListener( 'keyup', ( event ) => { keyStates[ event.code ] = false; } );
+            function updateTargets(dt) {
+                const time = performance.now() / 1000;
+                
+                targets.forEach(t => {
+                    if(!t.active) return;
+                    const shift = Math.sin(time * t.speed + t.offset) * 2; 
+                    if(t.axis === 'y') {
+                        t.mesh.position.y = t.basePos.y + shift;
+                    } else {
+                        t.mesh.position.x = t.basePos.x + shift;
+                    }
+                    t.collider.center.copy(t.mesh.position);
+                });
+            }
+
+            // ==========================================
+            // 4. LÓGICA DE JOGO E MENUS
+            // ==========================================
             
-            container.addEventListener( 'mousedown', () => {
-                if (gameState === 'PLAYING') {
+            let selectedMap = null;
+            let selectedDiff = null;
+
+            document.querySelectorAll('.mapBtn').forEach(b => {
+                b.onclick = () => {
+                    document.querySelectorAll('.mapBtn').forEach(x => x.classList.remove('selected'));
+                    b.classList.add('selected');
+                    selectedMap = b.dataset.map;
+                    checkStart();
+                }
+            });
+
+            document.querySelectorAll('.diffBtn').forEach(b => {
+                b.onclick = () => {
+                    document.querySelectorAll('.diffBtn').forEach(x => x.classList.remove('selected'));
+                    b.classList.add('selected');
+                    selectedDiff = parseInt(b.dataset.val);
+                    currentDifficulty = b.innerText;
+                    checkStart();
+                }
+            });
+
+            function checkStart() {
+                document.getElementById('btnStart').disabled = !(selectedMap && selectedDiff);
+            }
+
+            document.getElementById('btnStart').onclick = () => {
+                if(loadedMap) scene.remove(loadedMap);
+                document.getElementById('btnStart').innerText = "CARREGANDO...";
+                
+                // Tenta iniciar a música ao clicar em JOGAR
+                startMusicContext();
+
+                loader.load(selectedMap, (gltf) => {
+                    loadedMap = gltf.scene;
+                    scene.add(loadedMap);
+                    worldOctree.fromGraphNode(loadedMap);
+                    
+                    spawnTargets(selectedDiff, loadedMap);
+                    playerCollider.start.set(0, 0.35, 0);
+                    playerCollider.end.set(0, 1, 0);
+                    playerVelocity.set(0,0,0);
+                    camera.position.copy(playerCollider.end);
+                    camera.rotation.set(0,0,0);
+                    
+                    score = 0;
+                    timeRemaining = 60;
+                    gameState = 'PLAYING';
+                    
+                    document.getElementById('startMenu').style.display = 'none';
+                    document.getElementById('hud').style.display = 'flex';
+                    document.getElementById('crosshair').style.display = 'block';
+                    document.getElementById('btnStart').innerText = "JOGAR AGORA";
+                    
                     document.body.requestPointerLock();
-                    mouseTime = performance.now();
-                }
-            } );
+                    
+                }, undefined, (err) => {
+                    console.error(err);
+                    alert("Erro ao carregar mapa.");
+                    document.getElementById('btnStart').innerText = "JOGAR AGORA";
+                });
+            };
 
-            document.addEventListener( 'mouseup', () => {
-                if (gameState === 'PLAYING' && document.pointerLockElement) {
-                    throwBall();
-                }
-            } );
+            function endGame(win) {
+                gameState = 'ENDED';
+                document.exitPointerLock();
+                playSound(win ? 'win' : 'gameover');
 
-            document.body.addEventListener( 'mousemove', ( event ) => {
-                if ( document.pointerLockElement === document.body ) {
-                    camera.rotation.y -= event.movementX / 500;
-                    camera.rotation.x -= event.movementY / 500;
+                let finalScore = score;
+                if(win) finalScore += Math.floor(timeRemaining * 10); 
+                
+                document.getElementById('hud').style.display = 'none';
+                document.getElementById('crosshair').style.display = 'none';
+                document.getElementById('endScreen').style.display = 'block';
+                
+                const title = document.getElementById('endTitle');
+                title.innerText = win ? "MISSÃO CUMPRIDA!" : "TEMPO ESGOTADO";
+                title.style.color = win ? "#FFD700" : "#F44336";
+                
+                document.getElementById('endScore').innerText = finalScore;
+                document.getElementById('endTime').innerText = timeRemaining.toFixed(1);
+                
+                document.getElementById('btnSave').disabled = false;
+                document.getElementById('btnSave').innerText = "SALVAR PONTUAÇÃO";
+            }
+
+            function updateHUD() {
+                document.getElementById('score').innerText = `PTS: ${score}`;
+                document.getElementById('targetCounter').innerText = `🎯 ${targetsHit}/${totalTargets}`;
+            }
+
+            // ==========================================
+            // 5. RANKING E CRÉDITOS
+            // ==========================================
+            const STORAGE_KEY = 'sniper_game_rank';
+
+            function getRanking() {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            }
+
+            document.getElementById('btnSave').onclick = () => {
+                const name = document.getElementById('playerName').value.trim() || "Anônimo";
+                const pts = parseInt(document.getElementById('endScore').innerText);
+                const time = parseFloat(document.getElementById('endTime').innerText);
+                
+                const rank = getRanking();
+                rank.push({ name, pts, time, diff: currentDifficulty });
+                rank.sort((a,b) => b.pts - a.pts || b.time - a.time);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(rank.slice(0, 50)));
+                
+                document.getElementById('btnSave').innerText = "SALVO!";
+                document.getElementById('btnSave').disabled = true;
+            };
+
+            function showRanking() {
+                const rank = getRanking();
+                const tbody = document.querySelector('#rankTable tbody');
+                tbody.innerHTML = '';
+                rank.forEach((r, i) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td class="rank-${i+1}">${i+1}º</td><td>${r.name}</td><td style="color:#4CAF50">${r.pts}</td><td>${r.time}s</td><td style="font-size: 12px">${r.diff}</td>`;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('startMenu').style.display = 'none';
+                document.getElementById('rankScreen').style.display = 'block';
+            }
+
+            // Navegação Menus
+            document.getElementById('btnRank').onclick = showRanking;
+            document.getElementById('btnCloseRank').onclick = () => {
+                document.getElementById('rankScreen').style.display = 'none';
+                document.getElementById('startMenu').style.display = 'flex';
+            };
+            document.getElementById('btnRestart').onclick = () => {
+                document.getElementById('endScreen').style.display = 'none';
+                document.getElementById('startMenu').style.display = 'flex';
+            };
+            document.getElementById('btnCredits').onclick = () => {
+                document.getElementById('startMenu').style.display = 'none';
+                document.getElementById('creditsScreen').style.display = 'block';
+            };
+            document.getElementById('btnCloseCredits').onclick = () => {
+                document.getElementById('creditsScreen').style.display = 'none';
+                document.getElementById('startMenu').style.display = 'flex';
+            };
+
+            // ==========================================
+            // 6. CONTROLES
+            // ==========================================
+            document.addEventListener('keydown', (e) => keyStates[e.code] = true);
+            document.addEventListener('keyup', (e) => keyStates[e.code] = false);
+            
+            document.addEventListener('mousedown', () => {
+                // Garante que a música toca se o usuário clicar na tela
+                startMusicContext();
+
+                if(gameState === 'PLAYING') {
+                    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                    sphere.castShadow = true;
+                    sphere.position.copy(camera.position).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.5));
+                    const vel = camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(50); 
+                    spheres.push({ mesh: sphere, velocity: vel, collider: new THREE.Sphere(sphere.position, 0.2) });
+                    scene.add(sphere);
+                    playSound('shoot'); 
                 }
-            } );
-            window.addEventListener( 'resize', onWindowResize );
-            function onWindowResize() {
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if(document.pointerLockElement) {
+                    camera.rotation.y -= e.movementX * 0.002;
+                    camera.rotation.x -= e.movementY * 0.002;
+                    camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+                }
+            });
+
+            // ==========================================
+            // 7. LOOP PRINCIPAL
+            // ==========================================
+            const clock = new THREE.Clock();
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const dt = Math.min(0.05, clock.getDelta());
+                
+                if(gameState === 'PLAYING') {
+                    timeRemaining -= dt;
+                    if(timeRemaining <= 0) {
+                        timeRemaining = 0;
+                        endGame(false);
+                    }
+                    document.getElementById('timer').innerText = `⏳ ${Math.ceil(timeRemaining)}`;
+
+                    updateTargets(dt);
+
+                    if(playerOnFloor) {
+                        if(keyStates['KeyW']) playerVelocity.add(getForwardVector().multiplyScalar(25 * dt));
+                        if(keyStates['KeyS']) playerVelocity.add(getForwardVector().multiplyScalar(-25 * dt));
+                        if(keyStates['KeyA']) playerVelocity.add(getSideVector().multiplyScalar(-25 * dt));
+                        if(keyStates['KeyD']) playerVelocity.add(getSideVector().multiplyScalar(25 * dt));
+                        if(keyStates['Space']) playerVelocity.y = 12;
+                    } else {
+                        playerVelocity.y -= GRAVITY * dt;
+                    }
+                    
+                    const damping = Math.exp(-4 * dt) - 1;
+                    playerVelocity.addScaledVector(playerVelocity, damping);
+                    playerCollider.translate(playerVelocity.clone().multiplyScalar(dt));
+                    playerCollisions();
+                    camera.position.copy(playerCollider.end);
+                    updateSpheres(dt);
+                }
+                renderer.render(scene, camera);
+            }
+
+            function getForwardVector() {
+                camera.getWorldDirection(playerDirection);
+                playerDirection.y = 0;
+                playerDirection.normalize();
+                return playerDirection;
+            }
+            function getSideVector() {
+                camera.getWorldDirection(playerDirection);
+                playerDirection.y = 0;
+                playerDirection.normalize();
+                playerDirection.cross(camera.up);
+                return playerDirection;
+            }
+            function playerCollisions() {
+                const res = worldOctree.capsuleIntersect(playerCollider);
+                playerOnFloor = false;
+                if(res) {
+                    playerOnFloor = res.normal.y > 0;
+                    if(!playerOnFloor) playerVelocity.addScaledVector(res.normal, -res.normal.dot(playerVelocity));
+                    playerCollider.translate(res.normal.multiplyScalar(res.depth));
+                }
+                if(camera.position.y < -30) {
+                    playerCollider.start.set(0, 0.35, 0);
+                    playerCollider.end.set(0, 1, 0);
+                    playerVelocity.set(0,0,0);
+                }
+            }
+            function updateSpheres(dt) {
+                for(let i = spheres.length - 1; i >= 0; i--) {
+                    const s = spheres[i];
+                    s.collider.center.addScaledVector(s.velocity, dt);
+                    s.mesh.position.copy(s.collider.center);
+                    s.velocity.y -= GRAVITY * dt;
+                    const hitMap = worldOctree.sphereIntersect(s.collider);
+                    if(hitMap) {
+                        scene.remove(s.mesh);
+                        spheres.splice(i, 1);
+                        continue;
+                    }
+                    for(let j = 0; j < targets.length; j++) {
+                        const t = targets[j];
+                        if(t.active && s.collider.intersectsSphere(t.collider)) {
+                            t.active = false;
+                            scene.remove(t.mesh);
+                            playSound('hit'); 
+                            score += 10;
+                            targetsHit++;
+                            updateHUD();
+                            scene.remove(s.mesh);
+                            spheres.splice(i, 1);
+                            if(targetsHit >= totalTargets) endGame(true);
+                            break; 
+                        }
+                    }
+                    if(s.mesh && s.mesh.position.distanceTo(camera.position) > 100) {
+                        scene.remove(s.mesh);
+                        spheres.splice(i, 1);
+                    }
+                }
+            }
+            window.addEventListener( 'resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize( window.innerWidth, window.innerHeight );
-            }
-            
-            // --- Lógica do Novo Menu ---
-            function checkStartButton() {
-                if (selectedMapFile && selectedDifficulty) {
-                    startGameBtn.disabled = false;
-                    startGameBtn.innerText = 'Iniciar Jogo';
-                } else {
-                    startGameBtn.disabled = true;
-                }
-            }
-
-            mapButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    mapButtons.forEach(btn => btn.classList.remove('selected'));
-                    button.classList.add('selected');
-                    selectedMapFile = button.dataset.mapFile;
-                    checkStartButton();
-                });
             });
-
-            difficultyButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    difficultyButtons.forEach(btn => btn.classList.remove('selected'));
-                    button.classList.add('selected');
-                    selectedDifficulty = DIFFICULTIES[button.dataset.difficulty];
-                    checkStartButton();
-                });
-            });
-
-            startGameBtn.addEventListener('click', () => {
-                if (selectedMapFile && selectedDifficulty) {
-                    startGame(selectedMapFile, selectedDifficulty);
-                    startGameBtn.disabled = true;
-                    startGameBtn.innerText = 'Carregando...';
-                }
-            });
-
-            restartButton.addEventListener('click', returnToMenu);
-
-            // --- Funções de Física e Colisão ---
-            function throwBall() {
-                const sphere = spheres[ sphereIdx ];
-                camera.getWorldDirection( playerDirection );
-                sphere.collider.center.copy( playerCollider.end ).addScaledVector( playerDirection, playerCollider.radius * 1.5 );
-                const impulse = 15 + 30 * ( 1 - Math.exp( ( mouseTime - performance.now() ) * 0.001 ) );
-                sphere.velocity.copy( playerDirection ).multiplyScalar( impulse );
-                sphere.velocity.addScaledVector( playerVelocity, 2 );
-                sphereIdx = ( sphereIdx + 1 ) % spheres.length;
-            }
-
-            function playerCollisions() {
-                const result = worldOctree.capsuleIntersect( playerCollider );
-                playerOnFloor = false;
-                if ( result ) {
-                    playerOnFloor = result.normal.y > 0;
-                    if ( ! playerOnFloor ) {
-                        playerVelocity.addScaledVector( result.normal, - result.normal.dot( playerVelocity ) );
-                    }
-                    if ( result.depth >= 1e-10 ) {
-                        playerCollider.translate( result.normal.multiplyScalar( result.depth ) );
-                    }
-                }
-            }
-
-            function updatePlayer( deltaTime ) {
-                let damping = Math.exp( - 4 * deltaTime ) - 1;
-                if ( ! playerOnFloor ) {
-                    playerVelocity.y -= GRAVITY * deltaTime;
-                    damping *= 0.1;
-                }
-                playerVelocity.addScaledVector( playerVelocity, damping );
-                const deltaPosition = playerVelocity.clone().multiplyScalar( deltaTime );
-                playerCollider.translate( deltaPosition );
-                playerCollisions();
-                camera.position.copy( playerCollider.end );
-            }
-
-            function playerSphereCollision( sphere ) {
-                const center = vector1.addVectors( playerCollider.start, playerCollider.end ).multiplyScalar( 0.5 );
-                const sphere_center = sphere.collider.center;
-                const r = playerCollider.radius + sphere.collider.radius;
-                const r2 = r * r;
-                for ( const point of [ playerCollider.start, playerCollider.end, center ] ) {
-                    const d2 = point.distanceToSquared( sphere_center );
-                    if ( d2 < r2 ) {
-                        const normal = vector1.subVectors( point, sphere_center ).normalize();
-                        const v1 = vector2.copy( normal ).multiplyScalar( normal.dot( playerVelocity ) );
-                        const v2 = vector3.copy( normal ).multiplyScalar( normal.dot( sphere.velocity ) );
-                        playerVelocity.add( v2 ).sub( v1 );
-                        sphere.velocity.add( v1 ).sub( v2 );
-                        const d = ( r - Math.sqrt( d2 ) ) / 2;
-                        sphere_center.addScaledVector( normal, - d );
-                    }
-                }
-            }
-
-            function spheresCollisions() {
-                for ( let i = 0, length = spheres.length; i < length; i ++ ) {
-                    const s1 = spheres[ i ];
-                    for ( let j = i + 1; j < length; j ++ ) {
-                        const s2 = spheres[ j ];
-                        const d2 = s1.collider.center.distanceToSquared( s2.collider.center );
-                        const r = s1.collider.radius + s2.collider.radius;
-                        const r2 = r * r;
-                        if ( d2 < r2 ) {
-                            const normal = vector1.subVectors( s1.collider.center, s2.collider.center ).normalize();
-                            const v1 = vector2.copy( normal ).multiplyScalar( normal.dot( s1.velocity ) );
-                            const v2 = vector3.copy( normal ).multiplyScalar( normal.dot( s2.velocity ) );
-                            s1.velocity.add( v2 ).sub( v1 );
-                            s2.velocity.add( v1 ).sub( v2 );
-                            const d = ( r - Math.sqrt( d2 ) ) / 2;
-                            s1.collider.center.addScaledVector( normal, d );
-                            s2.collider.center.addScaledVector( normal, - d );
-                        }
-                    }
-                }
-            }
-            
-            function updateSpheres( deltaTime ) {
-                spheres.forEach( sphere => {
-                    sphere.collider.center.addScaledVector( sphere.velocity, deltaTime );
-                    const result = worldOctree.sphereIntersect( sphere.collider );
-                    if ( result ) {
-                        sphere.velocity.addScaledVector( result.normal, - result.normal.dot( sphere.velocity ) * 1.5 );
-                        sphere.collider.center.add( result.normal.multiplyScalar( result.depth ) );
-                    } else {
-                        sphere.velocity.y -= GRAVITY * deltaTime;
-                    }
-                    const damping = Math.exp( - 1.5 * deltaTime ) - 1;
-                    sphere.velocity.addScaledVector( sphere.velocity, damping );
-                    
-                    if (gameState === 'PLAYING') {
-                        for (const target of targets) {
-                            if (target.active && sphere.collider.intersectsSphere(target.collider)) {
-                                target.active = false;
-                                target.mesh.visible = false;
-                                score++;
-                                scoreElement.innerText = `Pontos: ${score}`;
-                                sphere.collider.center.set(0, -100, 0); 
-                                sphere.velocity.set(0, 0, 0);
-                                break;
-                            }
-                        }
-                    }
-                    playerSphereCollision( sphere );
-                } );
-                spheresCollisions();
-                for ( const sphere of spheres ) {
-                    sphere.mesh.position.copy( sphere.collider.center );
-                }
-            }
-            
-            // --- Funções de Vetor e Controle ---
-            function getForwardVector() {
-                camera.getWorldDirection( playerDirection );
-                playerDirection.y = 0;
-                playerDirection.normalize();
-                return playerDirection;
-            }
-
-            function getSideVector() {
-                camera.getWorldDirection( playerDirection );
-                playerDirection.y = 0;
-                playerDirection.normalize();
-                playerDirection.cross( camera.up );
-                return playerDirection;
-            }
-
-            function controls( deltaTime ) {
-                if (gameState !== 'PLAYING') {
-                    playerVelocity.x = 0;
-                    playerVelocity.z = 0;
-                    return;
-                }
-                const speedDelta = deltaTime * ( playerOnFloor ? 40 : 8 );
-                if ( keyStates[ 'KeyW' ] ) playerVelocity.add( getForwardVector().multiplyScalar( speedDelta ) );
-                if ( keyStates[ 'KeyS' ] ) playerVelocity.add( getForwardVector().multiplyScalar( - speedDelta ) );
-                if ( keyStates[ 'KeyA' ] ) playerVelocity.add( getSideVector().multiplyScalar( - speedDelta ) );
-                if ( keyStates[ 'KeyD' ] ) playerVelocity.add( getSideVector().multiplyScalar( speedDelta ) );
-                if ( playerOnFloor && keyStates[ 'Space' ] ) playerVelocity.y = 15;
-            }
-            
-            function teleportPlayerIfOob() {
-                if ( camera.position.y <= -25 ) {
-                    // Reseta para uma posição segura (0, 1, 0)
-                    playerCollider.start.set( 0, 0.35, 0 );
-                    playerCollider.end.set( 0, 2, 0 );
-                    playerCollider.radius = 0.35;
-                    camera.position.copy( playerCollider.end );
-                    camera.rotation.set( 0, 0, 0 );
-                }
-            }
-            
-            // --- Funções de Estado do Jogo ---
-            function startGame(mapFile, numTargets) {
-                if (currentMap) {
-                    scene.remove(currentMap);
-                }
-                worldOctree.clear(); 
-                
-                loader.load( mapFile, ( gltf ) => {
-                    currentMap = gltf.scene;
-                    scene.add( currentMap );
-
-                    worldOctree.fromGraphNode( currentMap );
-
-                    currentMap.traverse( child => {
-                        if ( child.isMesh ) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                            if ( child.material.map ) {
-                                child.material.map.anisotropy = 4;
-                            }
-                        }
-                    });
-                    
-                    const mapBox = new THREE.Box3().setFromObject(currentMap);
-                    setupGameSession(numTargets, mapBox);
-                });
-            }
-
-            function setupGameSession(numTargets, mapBox) {
-                createTargets(numTargets, mapBox);
-                
-                score = 0;
-                timeLeft = 60;
-                scoreElement.innerText = `Pontos: 0`;
-                timerElement.innerText = `Tempo: 60`;
-
-                // Correção de Spawn:
-                const mapCenter = new THREE.Vector3();
-                mapBox.getCenter(mapCenter);
-                const spawnHeadY = mapBox.min.y + 1.8;
-                const spawnFeetY = mapBox.min.y + 0.35;
-
-                playerCollider.start.set( mapCenter.x, spawnFeetY, mapCenter.z );
-                playerCollider.end.set( mapCenter.x, spawnHeadY, mapCenter.z );
-                playerCollider.radius = 0.35;
-                
-                camera.position.copy( playerCollider.end );
-                camera.rotation.set( 0, 0, 0 );
-                playerVelocity.set(0, 0, 0);
-
-                // Inicia o jogo
-                startMenuElement.style.display = 'none';
-                endScreenElement.style.display = 'none';
-                hudElement.style.display = 'block';
-                crosshairElement.style.display = 'block';
-
-                gameState = 'PLAYING';
-                document.body.requestPointerLock();
-                
-                startGameBtn.disabled = true;
-                startGameBtn.innerText = 'Iniciar Jogo';
-            }
-
-            function endGame() {
-                gameState = 'ENDED';
-                finalScoreElement.innerText = score;
-                endScreenElement.style.display = 'flex';
-                hudElement.style.display = 'none';
-                crosshairElement.style.display = 'none';
-                document.exitPointerLock();
-            }
-
-            function returnToMenu() {
-                gameState = 'MENU';
-                endScreenElement.style.display = 'none';
-                startMenuElement.style.display = 'flex';
-                crosshairElement.style.display = 'none';
-                
-                clearTargets();
-
-                if (currentMap) {
-                    scene.remove(currentMap);
-                    currentMap = null;
-                }
-                worldOctree.clear();
-
-                selectedMapFile = null;
-                selectedDifficulty = null;
-                mapButtons.forEach(btn => btn.classList.remove('selected'));
-                difficultyButtons.forEach(btn => btn.classList.remove('selected'));
-                startGameBtn.disabled = true;
-            }
-
-            // --- Loop Principal (Animate) ---
-            function animate() {
-                const totalDeltaTime = Math.min( 0.05, clock.getDelta() );
-                
-                if (gameState === 'PLAYING') {
-                    timeLeft -= totalDeltaTime;
-                    timerElement.innerText = `Tempo: ${Math.max(0, Math.ceil(timeLeft))}`;
-                    if (timeLeft <= 0) {
-                        endGame();
-                    }
-                }
-                
-                const deltaTime = totalDeltaTime / STEPS_PER_FRAME;
-                
-                for ( let i = 0; i < STEPS_PER_FRAME; i ++ ) {
-                    controls( deltaTime );
-                    updatePlayer( deltaTime );
-                    updateSpheres( deltaTime );
-                    teleportPlayerIfOob();
-                }
-                
-                renderer.render( scene, camera );
-                stats.update();
-            }
+            animate();
         </script>
     </body>
 </html>
