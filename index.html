@@ -315,7 +315,7 @@
             // Física Player
             const GRAVITY = 30;
             const worldOctree = new Octree();
-            const playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1, 0), 0.35);
+            const playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 2.5, 0), 0.35);
             const playerVelocity = new THREE.Vector3();
             const playerDirection = new THREE.Vector3();
             let playerOnFloor = false;
@@ -641,7 +641,7 @@
                 }
                 if(camera.position.y < -30) {
                     playerCollider.start.set(0, 0.35, 0);
-                    playerCollider.end.set(0, 1, 0);
+                    playerCollider.end.set(0, 2.5, 0);
                     playerVelocity.set(0,0,0);
                 }
             }
