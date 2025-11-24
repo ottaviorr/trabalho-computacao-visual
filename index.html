@@ -219,7 +219,7 @@
             const audioLoader = new THREE.AudioLoader();
 
             // Tenta carregar a música
-            audioLoader.load('./audio/Doom.mp3', function(buffer) {
+            audioLoader.load('./examples/audio/Doom.mp3', function(buffer) {
                 backgroundMusic.setBuffer(buffer);
                 backgroundMusic.setLoop(true);
                 backgroundMusic.setVolume(0.4);
@@ -332,7 +332,7 @@
             targetGeo.rotateX(Math.PI / 2); // Deixar de pé virado pra frente
 
             // Carregamento
-            const loader = new GLTFLoader().setPath('./models/gltf/');
+            const loader = new GLTFLoader().setPath('./examples/models/gltf/');
             let loadedMap = null;
 
             // ==========================================
