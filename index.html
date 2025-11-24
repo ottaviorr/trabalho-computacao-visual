@@ -14,8 +14,8 @@
                 margin: 0; 
                 overflow: hidden; 
                 user-select: none; 
-                background-color: #050505;
-                font-family: 'Rajdhani', sans-serif; /* Fonte técnica */
+                /* Removido fundo preto para não interferir no carregamento */
+                font-family: 'Rajdhani', sans-serif; 
             }
             
             /* UI GERAL - ESTILO TÁTICO */
@@ -25,34 +25,25 @@
                 transform: translate(-50%, -50%);
                 color: white;
                 text-align: center;
-                /* Fundo Escuro com Blur */
                 background: rgba(15, 25, 15, 0.9);
                 backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(10px);
                 padding: 50px;
-                /* Borda dupla para estilo tech */
                 border: 1px solid #333;
                 outline: 1px solid rgba(76, 175, 80, 0.3);
                 outline-offset: -10px;
                 box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-                
                 z-index: 101;
                 width: 80%; max-width: 600px;
                 display: none;
                 flex-direction: column;
                 align-items: center;
-                
-                /* Corte nos cantos (Estilo Sci-Fi) */
-                clip-path: polygon(
-                    20px 0, 100% 0, 
-                    100% calc(100% - 20px), calc(100% - 20px) 100%, 
-                    0 100%, 0 20px
-                );
+                clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
             }
             
             /* TÍTULO PRINCIPAL */
             h1 {
-                font-family: 'Black Ops One', cursive; /* Fonte Militar */
+                font-family: 'Black Ops One', cursive;
                 font-size: 56px;
                 margin: 0 0 10px 0;
                 color: #4CAF50;
@@ -98,7 +89,6 @@
                 overflow: hidden;
             }
 
-            /* Efeito Hover nos Botões */
             button:hover:not(:disabled) { 
                 background-color: rgba(76, 175, 80, 0.1); 
                 color: #fff; 
@@ -107,7 +97,6 @@
                 text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
             }
             
-            /* Botão Selecionado */
             button.selected { 
                 background-color: #4CAF50; 
                 color: #000; 
@@ -115,13 +104,9 @@
                 box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
             }
 
-            button:disabled { 
-                opacity: 0.3; 
-                cursor: not-allowed; 
-                border-style: dashed;
-            }
+            button:disabled { opacity: 0.3; cursor: not-allowed; border-style: dashed; }
 
-            /* Botão JOGAR AGORA (Destaque) */
+            /* Botão JOGAR AGORA */
             #btnStart {
                 font-size: 28px;
                 padding: 15px 60px;
@@ -136,7 +121,6 @@
                 box-shadow: 0 0 30px rgba(76, 175, 80, 0.8);
             }
 
-            /* GRUPOS DE BOTÕES */
             .button-group {
                 display: flex;
                 justify-content: center;
@@ -145,7 +129,7 @@
                 width: 100%;
             }
 
-            /* MENU INFERIOR (Ranking/Créditos) */
+            /* MENU INFERIOR */
             #bottomMenu {
                 position: fixed;
                 bottom: 30px;
@@ -192,7 +176,6 @@
                 pointer-events: none;
                 display: none;
             }
-            /* Círculo da mira */
             #crosshair::before {
                 content: ''; position: absolute; top: 50%; left: 50%;
                 width: 30px; height: 30px;
@@ -330,8 +313,9 @@
             // 0. CONFIGURAÇÃO GERAL
             // ==========================================
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050505); // Fundo mais escuro
-            scene.fog = new THREE.Fog(0x050505, 0, 80);   // Fog escuro
+            // RESTAURAÇÃO DO CÉU AZUL ORIGINAL
+            scene.background = new THREE.Color(0x88ccee);
+            scene.fog = new THREE.Fog(0x88ccee, 0, 100);
 
             const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
             camera.rotation.order = 'YXZ';
