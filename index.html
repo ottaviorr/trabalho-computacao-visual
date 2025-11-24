@@ -14,11 +14,34 @@
                 margin: 0; 
                 overflow: hidden; 
                 user-select: none; 
-                /* Removido fundo preto para não interferir no carregamento */
                 font-family: 'Rajdhani', sans-serif; 
             }
             
-            /* UI GERAL - ESTILO TÁTICO */
+            #btnMute {
+                position: absolute;
+                top: 30px;
+                right: 30px;
+                z-index: 105;
+                background: rgba(0, 0, 0, 0.6);
+                border: 2px solid #4CAF50;
+                color: #4CAF50;
+                font-size: 24px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s;
+                box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+            }
+            #btnMute:hover {
+                background: #4CAF50;
+                color: black;
+                transform: scale(1.1);
+            }
+
             .overlay {
                 position: absolute;
                 top: 50%; left: 50%;
@@ -41,7 +64,6 @@
                 clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
             }
             
-            /* TÍTULO PRINCIPAL */
             h1 {
                 font-family: 'Black Ops One', cursive;
                 font-size: 56px;
@@ -56,7 +78,6 @@
                 filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.5));
             }
 
-            /* SUBTÍTULOS DE SEÇÃO */
             .menu-section-title {
                 font-size: 18px;
                 font-weight: 700;
@@ -71,7 +92,6 @@
                 width: 100%;
             }
 
-            /* BOTÕES GERAIS */
             button {
                 font-family: 'Rajdhani', sans-serif;
                 font-weight: 700;
@@ -106,7 +126,6 @@
 
             button:disabled { opacity: 0.3; cursor: not-allowed; border-style: dashed; }
 
-            /* Botão JOGAR AGORA */
             #btnStart {
                 font-size: 28px;
                 padding: 15px 60px;
@@ -129,7 +148,6 @@
                 width: 100%;
             }
 
-            /* MENU INFERIOR */
             #bottomMenu {
                 position: fixed;
                 bottom: 30px;
@@ -147,7 +165,6 @@
                 clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
             }
 
-            /* HUD */
             #hud {
                 position: absolute; top: 0; left: 0; width: 100%;
                 display: flex; justify-content: space-between;
@@ -164,7 +181,6 @@
             }
             #targetCounter { color: #FFD700; }
             
-            /* MIRA */
             #crosshair {
                 position: absolute; top: 50%; left: 50%;
                 transform: translate(-50%, -50%);
@@ -183,13 +199,11 @@
                 transform: translate(-50%, -50%); border-radius: 50%;
             }
 
-            /* RANKING TABLE */
             table { width: 100%; border-collapse: collapse; margin-top: 20px; color: #eee; }
             th, td { padding: 12px; border-bottom: 1px solid #333; text-align: center; font-size: 18px; }
             th { background: rgba(76, 175, 80, 0.2); color: #4CAF50; text-transform: uppercase; }
             .rank-1 { color: #FFD700; font-weight: bold; text-shadow: 0 0 10px #FFD700; }
             
-            /* INPUT */
             .input-group { margin: 20px 0; width: 100%; }
             input[type="text"] {
                 font-family: 'Rajdhani', sans-serif;
@@ -204,10 +218,27 @@
             }
             input[type="text"]:focus { border-color: #4CAF50; box-shadow: 0 0 15px rgba(76, 175, 80, 0.3); }
             
-            /* CRÉDITOS */
             .credits-list { list-style: none; padding: 0; margin: 20px 0; width: 100%; }
             .credits-list li { padding: 12px; font-size: 20px; color: #ccc; border-bottom: 1px solid #222; }
             .credits-list li:hover { color: #4CAF50; background: rgba(255,255,255,0.05); }
+
+            /* Estilo do Link do Github */
+            .github-link {
+                display: inline-block;
+                margin-top: 15px;
+                color: #4CAF50;
+                text-decoration: none;
+                font-size: 18px;
+                font-weight: bold;
+                border: 1px solid #4CAF50;
+                padding: 8px 16px;
+                border-radius: 4px;
+                transition: 0.3s;
+            }
+            .github-link:hover {
+                background: #4CAF50;
+                color: black;
+            }
 
         </style>
     </head>
@@ -220,14 +251,17 @@
         </div>
         <div id="crosshair"></div>
 
+        <button id="btnMute" title="Silenciar">🔊</button>
+
         <div id="startMenu" class="overlay" style="display: flex;">
             <h1>TIRO AO ALVO</h1>
             <p style="font-size: 16px; color: #aaa; margin-bottom: 20px; letter-spacing: 1px;">[ WASD: MOVER ] [ ESPAÇO: PULAR ] [ MOUSE: ATIRAR ]</p>
             
             <div class="menu-section-title">SELECIONE O MAPA</div>
             <div id="mapButtons" class="button-group">
-                <button class="mapBtn" data-map="collision-world.glb">ARENA PADRÃO</button>
-                <button class="mapBtn" data-map="ice_scream_3_shopping_center_map.glb">SHOPPING</button>
+                <button class="mapBtn" data-map="collision-world.glb">CASA</button>
+                <button class="mapBtn" data-map="low_poly_industrial_zone.glb">AREA INDUSTRIAL</button>
+                <button class="mapBtn" data-map="thrid-map.glb">ARENA TESTES</button>
             </div>
 
             <div class="menu-section-title">NÍVEL DE AMEAÇA</div>
@@ -288,7 +322,13 @@
                 <li>Caua Vitor</li>
                 <li style="color: #4CAF50; font-weight: bold;">Orientador: Prof. Tulio Gomes</li>
             </ul>
-            <p style="font-size: 14px; color: #666; margin-top: 20px;">PROJETO SEXTO PERÍODO - 2025</p>
+            <p style="font-size: 14px; color: #666; margin-top: 10px;">PROJETO SEXTO PERÍODO - 2025</p>
+            
+            <a href="https://github.com/ottaviorr/trabalho-computacao-visual" target="_blank" class="github-link">
+                🔗 ACESSAR REPOSITÓRIO GITHUB
+            </a>
+            <br><br>
+
             <button id="btnCloseCredits">VOLTAR</button>
         </div>
 
@@ -313,7 +353,6 @@
             // 0. CONFIGURAÇÃO GERAL
             // ==========================================
             const scene = new THREE.Scene();
-            // RESTAURAÇÃO DO CÉU AZUL ORIGINAL
             scene.background = new THREE.Color(0x88ccee);
             scene.fog = new THREE.Fog(0x88ccee, 0, 100);
 
@@ -345,6 +384,24 @@
                 if (listener.context.state === 'suspended') listener.context.resume();
                 if (backgroundMusic.buffer && !backgroundMusic.isPlaying) backgroundMusic.play();
             }
+
+            // LÓGICA DO BOTÃO MUTE
+            let isMuted = false;
+            const btnMute = document.getElementById('btnMute');
+            btnMute.onclick = () => {
+                isMuted = !isMuted;
+                if(isMuted) {
+                    listener.setMasterVolume(0);
+                    btnMute.innerText = "🔇";
+                    btnMute.style.borderColor = "#F44336";
+                    btnMute.style.color = "#F44336";
+                } else {
+                    listener.setMasterVolume(1);
+                    btnMute.innerText = "🔊";
+                    btnMute.style.borderColor = "#4CAF50";
+                    btnMute.style.color = "#4CAF50";
+                }
+            };
 
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             function playSound(type) {
@@ -399,7 +456,7 @@
             
             const GRAVITY = 30;
             const worldOctree = new Octree();
-            const playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 2.5, 0), 0.35);
+            const playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1.8, 0), 0.35);
             const playerVelocity = new THREE.Vector3();
             const playerDirection = new THREE.Vector3();
             let playerOnFloor = false;
@@ -416,7 +473,7 @@
             let loadedMap = null;
 
             // ==========================================
-            // 3. LÓGICA DE SPAWN
+            // 3. LÓGICA DE SPAWN (CORRIGIDA - ABAIXO DO TOPO)
             // ==========================================
             function spawnTargets(count, mapObj) {
                 targets.forEach(t => scene.remove(t.mesh));
@@ -424,9 +481,22 @@
 
                 const box = new THREE.Box3().setFromObject(mapObj);
                 const padding = 2;
+
+                // PADRÃO
+                let yMin = box.min.y + 1;
+                let yMax = box.min.y + 6;
+
+                // ### LÓGICA ESPECÍFICA PARA MAPA INDUSTRIAL ###
+                if (selectedMap === 'low_poly_industrial_zone.glb') {
+                    // Define o range começando 5m abaixo do topo até 1m acima do topo.
+                    // O sistema de colisão (hit) garantirá que não nasça dentro do chão.
+                    yMin = box.max.y - 0.0;
+                    yMax = box.max.y + 0.0; 
+                }
+
                 const bounds = {
                     xMin: box.min.x + padding, xMax: box.max.x - padding,
-                    yMin: box.min.y + 1,       yMax: box.min.y + 6,
+                    yMin: yMin,                yMax: yMax,
                     zMin: box.min.z + padding, zMax: box.max.z - padding
                 };
 
@@ -525,8 +595,21 @@
                     worldOctree.fromGraphNode(loadedMap);
                     spawnTargets(selectedDiff, loadedMap);
 
-                    playerCollider.start.set(0, 0.35, 0);
-                    playerCollider.end.set(0, 1, 0);
+                    document.getElementById('btnMute').style.display = 'none';
+
+                    const box = new THREE.Box3().setFromObject(loadedMap);
+                    
+                    // LÓGICA DE SPAWN JOGADOR (Igual ao anterior, nasce no topo se for Industrial)
+                    let spawnY = box.min.y + 0.35;
+                    let spawnHead = box.min.y + 1.8;
+
+                    if (selectedMap === 'low_poly_industrial_zone.glb') {
+                        spawnY = box.max.y + 0.35;
+                        spawnHead = box.max.y + 1.8;
+                    }
+
+                    playerCollider.start.set(0, spawnY, 0);
+                    playerCollider.end.set(0, spawnHead, 0);
                     playerVelocity.set(0,0,0);
                     camera.position.copy(playerCollider.end);
                     camera.rotation.set(0,0,0);
@@ -618,21 +701,28 @@
                 document.getElementById('startMenu').style.display = 'flex';
                 document.getElementById('bottomMenu').style.display = 'flex';
             };
-            document.getElementById('btnRestart').onclick = () => {
+            
+            // RETORNO AO MENU (RE-EXIBE O BOTÃO MUTE)
+            function returnToMenu() {
                 document.getElementById('endScreen').style.display = 'none';
+                document.getElementById('creditsScreen').style.display = 'none';
+                document.getElementById('rankScreen').style.display = 'none';
+                
                 document.getElementById('startMenu').style.display = 'flex';
                 document.getElementById('bottomMenu').style.display = 'flex';
-            };
+                
+                // RE-EXIBE O BOTÃO
+                document.getElementById('btnMute').style.display = 'flex';
+            }
+
+            document.getElementById('btnRestart').onclick = returnToMenu;
+            
             document.getElementById('btnCredits').onclick = () => {
                 document.getElementById('startMenu').style.display = 'none';
                 document.getElementById('bottomMenu').style.display = 'none';
                 document.getElementById('creditsScreen').style.display = 'flex';
             };
-            document.getElementById('btnCloseCredits').onclick = () => {
-                document.getElementById('creditsScreen').style.display = 'none';
-                document.getElementById('startMenu').style.display = 'flex';
-                document.getElementById('bottomMenu').style.display = 'flex';
-            };
+            document.getElementById('btnCloseCredits').onclick = returnToMenu;
 
             // ==========================================
             // 6. LOOP E CONTROLES
@@ -673,10 +763,12 @@
                     updateTargets(dt);
 
                     if(playerOnFloor) {
-                        if(keyStates['KeyW']) playerVelocity.add(getForwardVector().multiplyScalar(25 * dt));
-                        if(keyStates['KeyS']) playerVelocity.add(getForwardVector().multiplyScalar(-25 * dt));
-                        if(keyStates['KeyA']) playerVelocity.add(getSideVector().multiplyScalar(-25 * dt));
-                        if(keyStates['KeyD']) playerVelocity.add(getSideVector().multiplyScalar(25 * dt));
+                        // VELOCIDADE (55)
+                        const speed = 55; 
+                        if(keyStates['KeyW']) playerVelocity.add(getForwardVector().multiplyScalar(speed * dt));
+                        if(keyStates['KeyS']) playerVelocity.add(getForwardVector().multiplyScalar(-speed * dt));
+                        if(keyStates['KeyA']) playerVelocity.add(getSideVector().multiplyScalar(-speed * dt));
+                        if(keyStates['KeyD']) playerVelocity.add(getSideVector().multiplyScalar(speed * dt));
                         if(keyStates['Space']) playerVelocity.y = 12;
                     } else {
                         playerVelocity.y -= GRAVITY * dt;
