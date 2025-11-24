@@ -77,7 +77,7 @@ const builds = [
 		output: [
 			{
 				format: 'esm',
-				dir: 'build',
+				dir: 'dist',
 				minifyInternalExports: false,
 				entryFileNames: '[name]',
 			}
