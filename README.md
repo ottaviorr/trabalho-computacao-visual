@@ -1,4 +1,4 @@
-# 🎯 Tiro ao Alvo - DOOM Edition 🤘
+# 🎯 Tiro ao Alvo 🤘
 
 > Um FPS (First-Person Shooter) frenético desenvolvido para rodar no navegador, combinando mecânicas clássicas, física 3D e trilha sonora imersiva.
 
