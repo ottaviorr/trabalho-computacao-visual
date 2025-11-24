@@ -5,140 +5,104 @@
         <meta charset=utf-8 />
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <style>
-            body { 
-                margin: 0; 
-                overflow: hidden; 
-                user-select: none; 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fonte mais moderna */
-                background-color: #111;
-            }
+            body { margin: 0; overflow: hidden; user-select: none; font-family: 'Courier New', Courier, monospace; }
             
-            /* UI GERAL - Estilo "Glassmorphism" Tático */
+            /* UI GERAL */
             .overlay {
                 position: absolute;
                 top: 50%; left: 50%;
                 transform: translate(-50%, -50%);
                 color: white;
                 text-align: center;
-                /* Fundo gradiente escuro e translúcido */
-                background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(40, 40, 40, 0.9));
-                padding: 50px;
-                border-radius: 12px;
-                /* Borda brilhante sutil */
-                border: 1px solid rgba(76, 175, 80, 0.5);
-                box-shadow: 0 0 20px rgba(76, 175, 80, 0.2);
+                background-color: rgba(0, 0, 0, 0.95);
+                padding: 40px;
+                border-radius: 15px;
+                border: 2px solid #4CAF50;
                 z-index: 101;
-                width: 80%; max-width: 700px;
+                width: 80%; max-width: 600px;
                 display: none;
-                backdrop-filter: blur(5px);
+                flex-direction: column; /* Garante fluxo vertical */
+                align-items: center; /* Centraliza horizontalmente */
             }
             
-            /* TÍTULOS */
-            h1 {
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-                text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-                margin-top: 0;
-            }
-            h3 {
-                font-size: 14px;
-                color: #888;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-top: 30px;
-                margin-bottom: 10px;
-                border-bottom: 1px solid #333;
-                display: inline-block;
-                padding-bottom: 5px;
-            }
-
             /* ESTILO DOS BOTÕES */
             button {
                 font-family: inherit;
-                font-size: 16px;
-                padding: 12px 30px;
+                font-size: 20px;
+                padding: 12px 24px;
                 cursor: pointer;
-                margin: 8px;
-                background: rgba(255, 255, 255, 0.05);
-                color: #ccc;
-                border: 1px solid #555;
-                border-radius: 4px;
-                transition: all 0.2s ease;
+                margin: 10px; /* Espaçamento maior entre botões */
+                background: transparent;
+                color: white;
+                border: 2px solid #fff;
+                transition: 0.3s;
                 text-transform: uppercase;
-                font-weight: 600;
-                letter-spacing: 1px;
+                font-weight: bold;
             }
-            
-            /* Hover Effect */
-            button:hover:not(:disabled) { 
-                background-color: #4CAF50; 
-                color: #000; 
-                border-color: #4CAF50;
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-            }
-            
-            button:disabled { 
-                opacity: 0.3; 
-                cursor: not-allowed; 
-                border-color: #333;
-            }
-            
-            /* Botão Selecionado */
-            button.selected { 
-                background-color: rgba(76, 175, 80, 0.2); 
-                border-color: #4CAF50; 
-                color: #4CAF50;
-                box-shadow: inset 0 0 10px rgba(76, 175, 80, 0.2);
-            }
+            button:hover:not(:disabled) { background-color: #fff; color: #000; }
+            button:disabled { opacity: 0.3; cursor: not-allowed; }
+            button.selected { background-color: #4CAF50; border-color: #4CAF50; }
 
-            /* Botão Jogar Principal */
+            /* Botão Jogar Agora (Maior destaque) */
             #btnStart {
+                font-size: 24px;
+                padding: 15px 40px;
                 background-color: #4CAF50;
                 color: black;
                 border: none;
-                padding: 15px 50px;
-                font-size: 20px;
-                margin-top: 20px;
+                margin-top: 30px;
             }
             #btnStart:hover:not(:disabled) {
                 background-color: #45a049;
-                transform: scale(1.05);
-                box-shadow: 0 0 20px #4CAF50;
+                color: black;
             }
 
-            /* POSICIONAMENTO CANTO INFERIOR DIREITO */
-            .bottom-controls {
-                position: absolute;
-                bottom: 30px;
-                right: 30px;
+            /* Títulos de Seção no Menu */
+            .menu-section-title {
+                font-size: 18px;
+                color: #aaa;
+                margin-top: 25px;
+                margin-bottom: 10px;
+                text-transform: uppercase;
+            }
+
+            /* Grupos de Botões */
+            .button-group {
                 display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
                 gap: 10px;
             }
-            .bottom-controls button {
+
+            /* NOVO MENU INFERIOR DIREITO */
+            #bottomMenu {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                display: flex;
+                gap: 10px;
+                z-index: 102; /* Acima do overlay se necessário */
+            }
+
+            #bottomMenu button {
                 font-size: 14px;
-                padding: 10px 20px;
-                background: rgba(0, 0, 0, 0.8);
-                border: 1px solid #444;
+                padding: 8px 16px;
+                background-color: rgba(0, 0, 0, 0.8);
+                border: 1px solid #4CAF50;
             }
 
             /* HUD (CABEÇALHO DURANTE O JOGO) */
             #hud {
                 position: absolute; top: 0; left: 0; width: 100%;
-                display: flex; justify-content: space-between;
-                padding: 20px 40px;
-                box-sizing: border-box;
-                /* Gradiente apenas no topo */
-                background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+                display: flex; justify-content: space-around;
+                background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+                padding: 15px 0;
                 color: #fff;
-                font-family: 'Courier New', monospace; /* Manter números monoespaçados */
-                font-size: 28px;
+                font-size: 24px;
                 font-weight: bold;
                 text-shadow: 2px 2px 0 #000;
                 z-index: 90;
                 display: none;
-                pointer-events: none;
             }
             #targetCounter { color: #FFD700; }
             
@@ -146,120 +110,114 @@
             #crosshair {
                 position: absolute; top: 50%; left: 50%;
                 transform: translate(-50%, -50%);
-                width: 6px; height: 6px;
-                background: #00ff00;
+                width: 20px; height: 20px;
+                border: 2px solid rgba(255, 255, 255, 0.8);
                 border-radius: 50%;
-                box-shadow: 0 0 5px #00ff00;
                 z-index: 90;
                 pointer-events: none;
                 display: none;
             }
-            /* Círculo externo da mira */
-            #crosshair::before {
+            #crosshair::after {
                 content: ''; position: absolute; top: 50%; left: 50%;
-                width: 24px; height: 24px;
-                border: 2px solid rgba(255, 255, 255, 0.5);
+                width: 4px; height: 4px; background: red;
                 transform: translate(-50%, -50%); border-radius: 50%;
             }
 
             /* RANKING TABLE */
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; color: #ddd; }
-            th, td { padding: 12px; border-bottom: 1px solid #333; text-align: center; }
-            th { background: rgba(76, 175, 80, 0.2); color: #4CAF50; font-weight: 600; text-transform: uppercase; font-size: 14px; }
-            .rank-1 { color: #FFD700; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 10px; border-bottom: 1px solid #444; text-align: center; }
+            th { background: #222; color: #4CAF50; }
+            .rank-1 { color: #FFD700; font-weight: bold; }
             .rank-2 { color: #C0C0C0; }
             .rank-3 { color: #CD7F32; }
 
-            /* INPUT NOME */
-            input[type="text"] {
-                font-size: 24px; padding: 15px; text-align: center;
-                background: rgba(0,0,0,0.5); border: 2px solid #4CAF50; color: white;
-                font-family: inherit; width: 70%;
-                border-radius: 8px; outline: none;
-                margin-bottom: 20px;
+            /* LISTA DE CRÉDITOS */
+            .credits-list li {
+                padding: 10px;
+                font-size: 22px;
+                color: #ddd;
+                border-bottom: 1px solid #333;
             }
-            input[type="text"]:focus { box-shadow: 0 0 15px rgba(76, 175, 80, 0.4); }
+            .credits-list li:hover { color: #4CAF50; }
 
+            /* MENUS ESPECÍFICOS (Telas de Fim, Rank, Créditos) */
+            #endScreen h1 { font-size: 50px; margin: 0 0 20px 0; }
+            .input-group { margin: 20px 0; }
+            input[type="text"] {
+                font-size: 20px; padding: 10px; text-align: center;
+                background: #222; border: 1px solid #555; color: white;
+                font-family: inherit; width: 60%;
+            }
         </style>
     </head>
     <body>
 
         <div id="hud">
-            <div id="timer">⏱ 60</div>
+            <div id="timer">⏳ 60</div>
             <div id="score">PTS: 0</div>
             <div id="targetCounter">🎯 0/0</div>
         </div>
         <div id="crosshair"></div>
 
         <div id="startMenu" class="overlay" style="display: flex;">
-            <h1 style="color: #4CAF50; margin-bottom: 5px;">🎯 Tiro ao Alvo</h1>
-            <p style="font-size: 14px; color: #aaa; margin-bottom: 30px;">WASD: Mover | ESPAÇO: Pular | MOUSE: Atirar</p>
+            <h1 style="color: #4CAF50; margin-bottom: 5px; font-size: 48px;">🎯 TIRO AO ALVO</h1>
+            <p style="font-size: 16px; color: #aaa; margin-bottom: 20px;">WASD: Mover | ESPAÇO: Pular | MOUSE: Atirar</p>
             
-            <h3>1. Escolha o Mapa</h3>
-            <div id="mapButtons">
-                <button class="mapBtn" data-map="collision-world.glb">Arena Padrão</button>
-                <button class="mapBtn" data-map="ice_scream_3_shopping_center_map.glb">Shopping</button>
+            <div class="menu-section-title">1. ESCOLHA O MAPA</div>
+            <div id="mapButtons" class="button-group">
+                <button class="mapBtn" data-map="collision-world.glb">ARENA PADRÃO</button>
+                <button class="mapBtn" data-map="ice_scream_3_shopping_center_map.glb">SHOPPING</button>
             </div>
 
-            <h3>2. Dificuldade</h3>
-            <div id="diffButtons">
-                <button class="diffBtn" data-val="10">Fácil</button>
-                <button class="diffBtn" data-val="20">Médio</button>
-                <button class="diffBtn" data-val="35">Difícil</button>
-            </div>
-
-            <div style="margin-top: 30px;">
-                <button id="btnStart" disabled>JOGAR AGORA</button>
+            <div class="menu-section-title">2. DIFICULDADE</div>
+            <div id="diffButtons" class="button-group">
+                <button class="diffBtn" data-val="10">FÁCIL</button>
+                <button class="diffBtn" data-val="20">MÉDIO</button>
+                <button class="diffBtn" data-val="35">DIFÍCIL</button>
             </div>
             
-            <div class="bottom-controls">
-                <button id="btnRank">🏆 Ranking</button>
-                <button id="btnCredits">👥 Créditos</button>
-            </div>
+            <button id="btnStart" disabled>JOGAR AGORA</button>
+        </div>
+
+        <div id="bottomMenu">
+            <button id="btnRank">🏆 RANKING</button>
+            <button id="btnCredits">👥 CRÉDITOS</button>
         </div>
 
         <div id="endScreen" class="overlay">
             <h1 id="endTitle">FIM DE JOGO</h1>
-            <div style="display: flex; justify-content: center; gap: 40px; margin-bottom: 30px;">
-                <div>
-                    <p style="font-size: 14px; color: #888; margin: 0;">PONTUAÇÃO</p>
-                    <span id="endScore" style="font-size: 40px; color: #4CAF50; font-weight: bold;">0</span>
-                </div>
-                <div>
-                    <p style="font-size: 14px; color: #888; margin: 0;">TEMPO RESTANTE</p>
-                    <span id="endTime" style="font-size: 40px; color: #2196F3; font-weight: bold;">0</span>s
-                </div>
+            <p>Pontos: <span id="endScore" style="color: #4CAF50; font-weight: bold;">0</span></p>
+            <p>Tempo Restante: <span id="endTime" style="color: #2196F3;">0</span>s</p>
+            
+            <div class="input-group">
+                <input type="text" id="playerName" placeholder="DIGITE SEU NOME" maxlength="15">
             </div>
             
-            <input type="text" id="playerName" placeholder="DIGITE SEU NOME" maxlength="15">
-            <br>
             <button id="btnSave">SALVAR PONTUAÇÃO</button>
             <button id="btnRestart">VOLTAR AO MENU</button>
         </div>
 
         <div id="rankScreen" class="overlay">
-            <h1 style="color: #FFD700; margin-bottom: 0;">🏆 HALL DA FAMA</h1>
-            <div style="max-height: 400px; overflow-y: auto; margin-top: 20px;">
+            <h1 style="color: #FFD700;">🏆 HALL DA FAMA</h1>
+            <div style="max-height: 300px; overflow-y: auto; width: 100%;">
                 <table id="rankTable">
                     <thead><tr><th>#</th><th>NOME</th><th>PTS</th><th>TEMPO</th><th>MODO</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button id="btnCloseRank" style="margin-top: 20px;">VOLTAR</button>
+            <button id="btnCloseRank" style="margin-top: 20px;">FECHAR</button>
         </div>
 
         <div id="creditsScreen" class="overlay">
             <h1 style="color: #2196F3;">👥 EQUIPE</h1>
-            <div style="text-align: left; display: inline-block; margin: 20px 0;">
-                <p style="font-size: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;">Desenvolvedores:</p>
-                <p>• Rafael Florindo</p>
-                <p>• Luciano Junior</p>
-                <p>• Otavio Herdy</p>
-                <p>• Caua Vitor</p>
-                <p style="font-size: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; margin-top: 30px;">Orientação:</p>
-                <p>• Prof. Tulio Gomes</p>
-            </div>
-            <br>
+            <ul class="credits-list" style="list-style: none; padding: 0; margin: 20px 0; width: 100%;">
+                <li>Rafael Florindo</li>
+                <li>Luciano Junior</li>
+                <li>Otavio Herdy</li>
+                <li>Caua Vitor</li>
+                <li>Professor Orientador - Tulio Gomes</li>
+            </ul>
+            <p style="font-size: 14px; color: #888; margin-top: 30px;">Tiro ao Alvo - Sexto Período</p>
             <button id="btnCloseCredits">VOLTAR</button>
         </div>
 
@@ -275,6 +233,7 @@
         </script>
 
         <script type="module">
+            // ... (MANTENHA TODO O SEU CÓDIGO JAVASCRIPT AQUI EXATAMENTE COMO ESTAVA) ...
             import * as THREE from 'three';
             import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
             import { Octree } from 'three/addons/math/Octree.js';
@@ -297,26 +256,38 @@
             document.getElementById('container').appendChild(renderer.domElement);
 
             // ==========================================
-            // 1. SISTEMA DE ÁUDIO
+            // 1. SISTEMA DE ÁUDIO (MÚSICA + EFEITOS)
             // ==========================================
+            
+            // 1.1 Listener do Three.js para a MÚSICA
             const listener = new THREE.AudioListener();
             camera.add(listener);
             
             const backgroundMusic = new THREE.Audio(listener);
             const audioLoader = new THREE.AudioLoader();
 
+            // ATENÇÃO: Verifique o caminho dos seus arquivos de áudio
             audioLoader.load('./examples/audio/Doom.mp3', function(buffer) {
                 backgroundMusic.setBuffer(buffer);
                 backgroundMusic.setLoop(true);
                 backgroundMusic.setVolume(0.4);
-            }, undefined, function() { console.warn("Música não encontrada."); });
+            }, undefined, function(err) {
+                console.warn("Aviso: Música não encontrada. Verifique o caminho './examples/audio/Doom.mp3'");
+            });
 
+            // Função para destravar o áudio no clique
             function startMusicContext() {
-                if (listener.context.state === 'suspended') listener.context.resume();
-                if (backgroundMusic.buffer && !backgroundMusic.isPlaying) backgroundMusic.play();
+                if (listener.context.state === 'suspended') {
+                    listener.context.resume();
+                }
+                if (backgroundMusic.buffer && !backgroundMusic.isPlaying) {
+                    backgroundMusic.play();
+                }
             }
 
+            // 1.2 Sintetizador para EFEITOS SONOROS (Tiro, Acerto)
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
             function playSound(type) {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 const osc = audioCtx.createOscillator();
@@ -326,32 +297,50 @@
                 const now = audioCtx.currentTime;
                 
                 if (type === 'shoot') {
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                    gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                    osc.start(now); osc.stop(now + 0.1);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
                 } else if (type === 'hit') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(1200, now);
-                    gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                    osc.start(now); osc.stop(now + 0.3);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, now);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
                 } else if (type === 'win') {
                     [523, 659, 784, 1046].forEach((freq, i) => {
-                        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-                        o.connect(g); g.connect(audioCtx.destination); o.type = 'triangle'; o.frequency.value = freq;
-                        g.gain.setValueAtTime(0.2, now + i*0.1); g.gain.linearRampToValueAtTime(0, now + i*0.1 + 0.5);
-                        o.start(now + i*0.1); o.stop(now + i*0.1 + 0.5);
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.value = freq;
+                        g.gain.setValueAtTime(0.2, now + i*0.1);
+                        g.gain.linearRampToValueAtTime(0, now + i*0.1 + 0.5);
+                        o.start(now + i*0.1);
+                        o.stop(now + i*0.1 + 0.5);
                     });
                 } else if (type === 'gameover') {
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(50, now + 1);
-                    gain.gain.setValueAtTime(0.5, now); gain.gain.linearRampToValueAtTime(0, now + 1);
-                    osc.start(now); osc.stop(now + 1);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(50, now + 1);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 1);
+                    osc.start(now);
+                    osc.stop(now + 1);
                 }
             }
 
             // ==========================================
-            // 2. ELEMENTOS DO CENÁRIO
+            // 2. ELEMENTOS DO CENÁRIO E FÍSICA
             // ==========================================
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
+            
             const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
             dirLight.position.set(-5, 25, -1);
             dirLight.castShadow = true;
@@ -368,7 +357,7 @@
             let targetsHit = 0;
             let currentDifficulty = "";
             
-            // Física
+            // Física Player e Mundo
             const GRAVITY = 30;
             const worldOctree = new Octree();
             const playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 2.5, 0), 0.35);
@@ -377,26 +366,31 @@
             let playerOnFloor = false;
             const keyStates = {};
 
-            // Objetos
+            // Projéteis
             const spheres = [];
             const sphereGeometry = new THREE.IcosahedronGeometry(0.2, 3);
             const sphereMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00, roughness: 0.2 });
+
+            // Alvos
             let targets = [];
             const targetGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.2, 32);
             targetGeo.rotateX(Math.PI / 2);
-            
+
+            // Carregamento
             const loader = new GLTFLoader().setPath('./examples/models/gltf/');
             let loadedMap = null;
 
             // ==========================================
-            // 3. SPAWN COM COLISÃO
+            // 3. LÓGICA DE ALVOS (COM COLISÃO)
             // ==========================================
             function spawnTargets(count, mapObj) {
+                // 1. Limpa alvos antigos
                 targets.forEach(t => scene.remove(t.mesh));
                 targets = [];
 
+                // 2. Calcula limites do mapa
                 const box = new THREE.Box3().setFromObject(mapObj);
-                const padding = 2;
+                const padding = 2; // Margem de segurança
                 const bounds = {
                     xMin: box.min.x + padding, xMax: box.max.x - padding,
                     yMin: box.min.y + 1,       yMax: box.min.y + 6,
@@ -407,22 +401,29 @@
                 let attempts = 0;
                 const maxAttempts = count * 50; 
 
+                // 3. Loop de criação com "Tentativa e Erro"
                 while (createdCount < count && attempts < maxAttempts) {
                     attempts++;
+
+                    // Posição aleatória
                     const candidatePos = new THREE.Vector3(
                         THREE.MathUtils.randFloat(bounds.xMin, bounds.xMax),
                         THREE.MathUtils.randFloat(bounds.yMin, bounds.yMax),
                         THREE.MathUtils.randFloat(bounds.zMin, bounds.zMax)
                     );
 
+                    // VERIFICAÇÃO: Cria esfera de teste para ver se bate em parede
                     const testCollider = new THREE.Sphere(candidatePos, 1.0);
                     const hit = worldOctree.sphereIntersect(testCollider);
 
+                    // Se não bateu em nada (hit é null), pode criar
                     if (!hit) {
                         const mat = new THREE.MeshStandardMaterial({ 
-                            color: Math.random() > 0.5 ? 0xff0000 : 0xffa500, emissive: 0x330000
+                            color: Math.random() > 0.5 ? 0xff0000 : 0xffa500,
+                            emissive: 0x330000
                         });
                         const mesh = new THREE.Mesh(targetGeo, mat);
+                        
                         mesh.position.copy(candidatePos);
                         mesh.lookAt(0, mesh.position.y, 0); 
                         mesh.castShadow = true;
@@ -437,9 +438,11 @@
                             speed: THREE.MathUtils.randFloat(1, 3),
                             offset: Math.random() * Math.PI * 2
                         });
+
                         createdCount++;
                     }
                 }
+
                 totalTargets = createdCount;
                 targetsHit = 0;
                 updateHUD();
@@ -447,17 +450,21 @@
 
             function updateTargets(dt) {
                 const time = performance.now() / 1000;
+                
                 targets.forEach(t => {
                     if(!t.active) return;
                     const shift = Math.sin(time * t.speed + t.offset) * 2; 
-                    if(t.axis === 'y') t.mesh.position.y = t.basePos.y + shift;
-                    else t.mesh.position.x = t.basePos.x + shift;
+                    if(t.axis === 'y') {
+                        t.mesh.position.y = t.basePos.y + shift;
+                    } else {
+                        t.mesh.position.x = t.basePos.x + shift;
+                    }
                     t.collider.center.copy(t.mesh.position);
                 });
             }
 
             // ==========================================
-            // 4. LÓGICA DE JOGO E INTERFACE
+            // 4. LÓGICA DE JOGO E MENUS
             // ==========================================
             let selectedMap = null;
             let selectedDiff = null;
@@ -488,14 +495,19 @@
             document.getElementById('btnStart').onclick = () => {
                 if(loadedMap) scene.remove(loadedMap);
                 document.getElementById('btnStart').innerText = "CARREGANDO...";
-                startMusicContext();
+                
+                startMusicContext(); // Inicia música
 
                 loader.load(selectedMap, (gltf) => {
                     loadedMap = gltf.scene;
                     scene.add(loadedMap);
+                    
+                    // Limpa octree antiga e cria nova
                     worldOctree.fromGraphNode(loadedMap);
+                    
                     spawnTargets(selectedDiff, loadedMap);
 
+                    // Reset Player
                     playerCollider.start.set(0, 0.35, 0);
                     playerCollider.end.set(0, 1, 0);
                     playerVelocity.set(0,0,0);
@@ -507,14 +519,16 @@
                     gameState = 'PLAYING';
                     
                     document.getElementById('startMenu').style.display = 'none';
+                    document.getElementById('bottomMenu').style.display = 'none'; // Esconde menu inferior ao jogar
                     document.getElementById('hud').style.display = 'flex';
                     document.getElementById('crosshair').style.display = 'block';
                     document.getElementById('btnStart').innerText = "JOGAR AGORA";
+                    
                     document.body.requestPointerLock();
                     
                 }, undefined, (err) => {
                     console.error(err);
-                    alert("Erro ao carregar mapa.");
+                    alert("Erro ao carregar mapa. Verifique o console.");
                     document.getElementById('btnStart').innerText = "JOGAR AGORA";
                 });
             };
@@ -580,6 +594,7 @@
                     tbody.appendChild(tr);
                 });
                 document.getElementById('startMenu').style.display = 'none';
+                document.getElementById('bottomMenu').style.display = 'none'; // Esconde menu inferior
                 document.getElementById('rankScreen').style.display = 'block';
             }
 
@@ -587,35 +602,42 @@
             document.getElementById('btnCloseRank').onclick = () => {
                 document.getElementById('rankScreen').style.display = 'none';
                 document.getElementById('startMenu').style.display = 'flex';
+                document.getElementById('bottomMenu').style.display = 'flex'; // Mostra menu inferior de volta
             };
             document.getElementById('btnRestart').onclick = () => {
                 document.getElementById('endScreen').style.display = 'none';
                 document.getElementById('startMenu').style.display = 'flex';
+                document.getElementById('bottomMenu').style.display = 'flex'; // Mostra menu inferior de volta
             };
             document.getElementById('btnCredits').onclick = () => {
                 document.getElementById('startMenu').style.display = 'none';
+                document.getElementById('bottomMenu').style.display = 'none'; // Esconde menu inferior
                 document.getElementById('creditsScreen').style.display = 'block';
             };
             document.getElementById('btnCloseCredits').onclick = () => {
                 document.getElementById('creditsScreen').style.display = 'none';
                 document.getElementById('startMenu').style.display = 'flex';
+                document.getElementById('bottomMenu').style.display = 'flex'; // Mostra menu inferior de volta
             };
 
             // ==========================================
-            // 6. CONTROLES E LOOP
+            // 6. CONTROLES
             // ==========================================
             document.addEventListener('keydown', (e) => keyStates[e.code] = true);
             document.addEventListener('keyup', (e) => keyStates[e.code] = false);
             
             document.addEventListener('mousedown', () => {
                 startMusicContext();
+
                 if(gameState === 'PLAYING') {
                     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
                     sphere.castShadow = true;
                     sphere.position.copy(camera.position).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.5));
+                    
                     const vel = camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(50); 
                     spheres.push({ mesh: sphere, velocity: vel, collider: new THREE.Sphere(sphere.position, 0.2) });
                     scene.add(sphere);
+                    
                     playSound('shoot'); 
                 }
             });
@@ -628,17 +650,26 @@
                 }
             });
 
+            // ==========================================
+            // 7. LOOP PRINCIPAL
+            // ==========================================
             const clock = new THREE.Clock();
+
             function animate() {
                 requestAnimationFrame(animate);
                 const dt = Math.min(0.05, clock.getDelta());
                 
                 if(gameState === 'PLAYING') {
                     timeRemaining -= dt;
-                    if(timeRemaining <= 0) { timeRemaining = 0; endGame(false); }
-                    document.getElementById('timer').innerText = `⏱ ${Math.ceil(timeRemaining)}`;
+                    if(timeRemaining <= 0) {
+                        timeRemaining = 0;
+                        endGame(false);
+                    }
+                    document.getElementById('timer').innerText = `⏳ ${Math.ceil(timeRemaining)}`;
+
                     updateTargets(dt);
 
+                    // Movimento Player
                     if(playerOnFloor) {
                         if(keyStates['KeyW']) playerVelocity.add(getForwardVector().multiplyScalar(25 * dt));
                         if(keyStates['KeyS']) playerVelocity.add(getForwardVector().multiplyScalar(-25 * dt));
@@ -660,10 +691,17 @@
             }
 
             function getForwardVector() {
-                camera.getWorldDirection(playerDirection); playerDirection.y = 0; playerDirection.normalize(); return playerDirection;
+                camera.getWorldDirection(playerDirection);
+                playerDirection.y = 0;
+                playerDirection.normalize();
+                return playerDirection;
             }
             function getSideVector() {
-                camera.getWorldDirection(playerDirection); playerDirection.y = 0; playerDirection.normalize(); playerDirection.cross(camera.up); return playerDirection;
+                camera.getWorldDirection(playerDirection);
+                playerDirection.y = 0;
+                playerDirection.normalize();
+                playerDirection.cross(camera.up);
+                return playerDirection;
             }
             function playerCollisions() {
                 const res = worldOctree.capsuleIntersect(playerCollider);
@@ -673,8 +711,11 @@
                     if(!playerOnFloor) playerVelocity.addScaledVector(res.normal, -res.normal.dot(playerVelocity));
                     playerCollider.translate(res.normal.multiplyScalar(res.depth));
                 }
+                // Respawn se cair do mapa
                 if(camera.position.y < -30) {
-                    playerCollider.start.set(0, 0.35, 0); playerCollider.end.set(0, 2.5, 0); playerVelocity.set(0,0,0);
+                    playerCollider.start.set(0, 0.35, 0);
+                    playerCollider.end.set(0, 2.5, 0);
+                    playerVelocity.set(0,0,0);
                 }
             }
             function updateSpheres(dt) {
@@ -685,23 +726,35 @@
                     s.velocity.y -= GRAVITY * dt;
                     
                     const hitMap = worldOctree.sphereIntersect(s.collider);
-                    if(hitMap) { scene.remove(s.mesh); spheres.splice(i, 1); continue; }
-
+                    if(hitMap) {
+                        scene.remove(s.mesh);
+                        spheres.splice(i, 1);
+                        continue;
+                    }
                     for(let j = 0; j < targets.length; j++) {
                         const t = targets[j];
                         if(t.active && s.collider.intersectsSphere(t.collider)) {
-                            t.active = false; scene.remove(t.mesh); playSound('hit'); 
-                            score += 10; targetsHit++; updateHUD();
-                            scene.remove(s.mesh); spheres.splice(i, 1);
+                            t.active = false;
+                            scene.remove(t.mesh);
+                            playSound('hit'); 
+                            score += 10;
+                            targetsHit++;
+                            updateHUD();
+                            scene.remove(s.mesh);
+                            spheres.splice(i, 1);
                             if(targetsHit >= totalTargets) endGame(true);
                             break; 
                         }
                     }
-                    if(s.mesh && s.mesh.position.distanceTo(camera.position) > 100) { scene.remove(s.mesh); spheres.splice(i, 1); }
+                    if(s.mesh && s.mesh.position.distanceTo(camera.position) > 100) {
+                        scene.remove(s.mesh);
+                        spheres.splice(i, 1);
+                    }
                 }
             }
             window.addEventListener( 'resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
                 renderer.setSize( window.innerWidth, window.innerHeight );
             });
             animate();
