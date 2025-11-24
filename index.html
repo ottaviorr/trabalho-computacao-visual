@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
     <head>
-        <title>Tiro ao Alvo</title>
+        <title>Tiro ao Alvo - FPS</title>
         <meta charset=utf-8 />
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <style>
@@ -218,14 +218,13 @@
             const backgroundMusic = new THREE.Audio(listener);
             const audioLoader = new THREE.AudioLoader();
 
-            // Tenta carregar a música
+            // ATENÇÃO: Verifique o caminho dos seus arquivos de áudio
             audioLoader.load('./examples/audio/Doom.mp3', function(buffer) {
                 backgroundMusic.setBuffer(buffer);
                 backgroundMusic.setLoop(true);
                 backgroundMusic.setVolume(0.4);
-                console.log("Música carregada com sucesso!");
             }, undefined, function(err) {
-                console.warn("Erro ao carregar música. Verifique se a pasta 'audio/Doom.mp3' existe.");
+                console.warn("Aviso: Música não encontrada. Verifique o caminho './examples/audio/Doom.mp3'");
             });
 
             // Função para destravar o áudio no clique
@@ -289,9 +288,8 @@
             }
 
             // ==========================================
-            // 2. ELEMENTOS DO CENÁRIO
+            // 2. ELEMENTOS DO CENÁRIO E FÍSICA
             // ==========================================
-            // Luzes
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
             
@@ -309,10 +307,9 @@
             let timeRemaining = 60;
             let totalTargets = 0;
             let targetsHit = 0;
-            let currentMapName = "";
             let currentDifficulty = "";
             
-            // Física Player
+            // Física Player e Mundo
             const GRAVITY = 30;
             const worldOctree = new Octree();
             const playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 2.5, 0), 0.35);
@@ -329,58 +326,76 @@
             // Alvos
             let targets = [];
             const targetGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.2, 32);
-            targetGeo.rotateX(Math.PI / 2); // Deixar de pé virado pra frente
+            targetGeo.rotateX(Math.PI / 2);
 
             // Carregamento
             const loader = new GLTFLoader().setPath('./examples/models/gltf/');
             let loadedMap = null;
 
             // ==========================================
-            // 3. LÓGICA DE ALVOS (DINÂMICA)
+            // 3. LÓGICA DE ALVOS (COM COLISÃO)
             // ==========================================
             function spawnTargets(count, mapObj) {
+                // 1. Limpa alvos antigos
                 targets.forEach(t => scene.remove(t.mesh));
                 targets = [];
 
+                // 2. Calcula limites do mapa
                 const box = new THREE.Box3().setFromObject(mapObj);
-                const size = new THREE.Vector3();
-                box.getSize(size);
-                
+                const padding = 2; // Margem de segurança
                 const bounds = {
-                    xMin: box.min.x + 5, xMax: box.max.x - 5,
-                    yMin: box.min.y + 1, yMax: box.min.y + 8, 
-                    zMin: box.min.z + 5, zMax: box.max.z - 5
+                    xMin: box.min.x + padding, xMax: box.max.x - padding,
+                    yMin: box.min.y + 1,       yMax: box.min.y + 6,
+                    zMin: box.min.z + padding, zMax: box.max.z - padding
                 };
 
-                for(let i=0; i<count; i++) {
-                    const mat = new THREE.MeshStandardMaterial({ 
-                        color: Math.random() > 0.5 ? 0xff0000 : 0xffa500,
-                        emissive: 0x330000
-                    });
-                    const mesh = new THREE.Mesh(targetGeo, mat);
-                    
-                    mesh.position.set(
+                let createdCount = 0;
+                let attempts = 0;
+                const maxAttempts = count * 50; 
+
+                // 3. Loop de criação com "Tentativa e Erro"
+                while (createdCount < count && attempts < maxAttempts) {
+                    attempts++;
+
+                    // Posição aleatória
+                    const candidatePos = new THREE.Vector3(
                         THREE.MathUtils.randFloat(bounds.xMin, bounds.xMax),
                         THREE.MathUtils.randFloat(bounds.yMin, bounds.yMax),
                         THREE.MathUtils.randFloat(bounds.zMin, bounds.zMax)
                     );
-                    
-                    mesh.lookAt(0, mesh.position.y, 0); 
-                    mesh.castShadow = true;
-                    scene.add(mesh);
 
-                    targets.push({
-                        mesh: mesh,
-                        collider: new THREE.Sphere(mesh.position.clone(), 0.6),
-                        active: true,
-                        basePos: mesh.position.clone(),
-                        axis: Math.random() > 0.5 ? 'y' : 'x',
-                        speed: THREE.MathUtils.randFloat(1, 3),
-                        offset: Math.random() * Math.PI * 2
-                    });
+                    // VERIFICAÇÃO: Cria esfera de teste para ver se bate em parede
+                    const testCollider = new THREE.Sphere(candidatePos, 1.0);
+                    const hit = worldOctree.sphereIntersect(testCollider);
+
+                    // Se não bateu em nada (hit é null), pode criar
+                    if (!hit) {
+                        const mat = new THREE.MeshStandardMaterial({ 
+                            color: Math.random() > 0.5 ? 0xff0000 : 0xffa500,
+                            emissive: 0x330000
+                        });
+                        const mesh = new THREE.Mesh(targetGeo, mat);
+                        
+                        mesh.position.copy(candidatePos);
+                        mesh.lookAt(0, mesh.position.y, 0); 
+                        mesh.castShadow = true;
+                        scene.add(mesh);
+
+                        targets.push({
+                            mesh: mesh,
+                            collider: new THREE.Sphere(mesh.position.clone(), 0.6),
+                            active: true,
+                            basePos: mesh.position.clone(),
+                            axis: Math.random() > 0.5 ? 'y' : 'x',
+                            speed: THREE.MathUtils.randFloat(1, 3),
+                            offset: Math.random() * Math.PI * 2
+                        });
+
+                        createdCount++;
+                    }
                 }
-                
-                totalTargets = count;
+
+                totalTargets = createdCount;
                 targetsHit = 0;
                 updateHUD();
             }
@@ -403,7 +418,6 @@
             // ==========================================
             // 4. LÓGICA DE JOGO E MENUS
             // ==========================================
-            
             let selectedMap = null;
             let selectedDiff = null;
 
@@ -434,15 +448,18 @@
                 if(loadedMap) scene.remove(loadedMap);
                 document.getElementById('btnStart').innerText = "CARREGANDO...";
                 
-                // Tenta iniciar a música ao clicar em JOGAR
-                startMusicContext();
+                startMusicContext(); // Inicia música
 
                 loader.load(selectedMap, (gltf) => {
                     loadedMap = gltf.scene;
                     scene.add(loadedMap);
+                    
+                    // Limpa octree antiga e cria nova
                     worldOctree.fromGraphNode(loadedMap);
                     
                     spawnTargets(selectedDiff, loadedMap);
+
+                    // Reset Player
                     playerCollider.start.set(0, 0.35, 0);
                     playerCollider.end.set(0, 1, 0);
                     playerVelocity.set(0,0,0);
@@ -462,7 +479,7 @@
                     
                 }, undefined, (err) => {
                     console.error(err);
-                    alert("Erro ao carregar mapa.");
+                    alert("Erro ao carregar mapa. Verifique o console.");
                     document.getElementById('btnStart').innerText = "JOGAR AGORA";
                 });
             };
@@ -531,7 +548,6 @@
                 document.getElementById('rankScreen').style.display = 'block';
             }
 
-            // Navegação Menus
             document.getElementById('btnRank').onclick = showRanking;
             document.getElementById('btnCloseRank').onclick = () => {
                 document.getElementById('rankScreen').style.display = 'none';
@@ -557,16 +573,17 @@
             document.addEventListener('keyup', (e) => keyStates[e.code] = false);
             
             document.addEventListener('mousedown', () => {
-                // Garante que a música toca se o usuário clicar na tela
                 startMusicContext();
 
                 if(gameState === 'PLAYING') {
                     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
                     sphere.castShadow = true;
                     sphere.position.copy(camera.position).add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.5));
+                    
                     const vel = camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(50); 
                     spheres.push({ mesh: sphere, velocity: vel, collider: new THREE.Sphere(sphere.position, 0.2) });
                     scene.add(sphere);
+                    
                     playSound('shoot'); 
                 }
             });
@@ -598,6 +615,7 @@
 
                     updateTargets(dt);
 
+                    // Movimento Player
                     if(playerOnFloor) {
                         if(keyStates['KeyW']) playerVelocity.add(getForwardVector().multiplyScalar(25 * dt));
                         if(keyStates['KeyS']) playerVelocity.add(getForwardVector().multiplyScalar(-25 * dt));
@@ -639,6 +657,7 @@
                     if(!playerOnFloor) playerVelocity.addScaledVector(res.normal, -res.normal.dot(playerVelocity));
                     playerCollider.translate(res.normal.multiplyScalar(res.depth));
                 }
+                // Respawn se cair do mapa
                 if(camera.position.y < -30) {
                     playerCollider.start.set(0, 0.35, 0);
                     playerCollider.end.set(0, 2.5, 0);
@@ -651,6 +670,7 @@
                     s.collider.center.addScaledVector(s.velocity, dt);
                     s.mesh.position.copy(s.collider.center);
                     s.velocity.y -= GRAVITY * dt;
+                    
                     const hitMap = worldOctree.sphereIntersect(s.collider);
                     if(hitMap) {
                         scene.remove(s.mesh);
